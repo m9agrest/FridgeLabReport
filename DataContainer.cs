@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Windows.Shapes;
 
 namespace FridgeLabReport.Data
 {
@@ -33,10 +29,12 @@ namespace FridgeLabReport.Data
             { DataField.Time, "time" }
         };
 
-        public readonly List<DataRow> DataRows = new();//todo ireadonly
+        private readonly List<DataRow> dataRows = new();
+        public readonly IReadOnlyList<DataRow> DataRows;
         private DataContainer(long time)//чтобы запретить внешний конструктор
         {
             this.time = time;
+            DataRows = new ReadOnlyCollection<DataRow>(dataRows);
         }
 
 
@@ -110,7 +108,7 @@ namespace FridgeLabReport.Data
                 if (!values.ContainsKey(dc.ChannelMap[FieldToChannel[DataField.Time]]))
                     continue;
 
-                dc.DataRows.Add(new DataRow(dc, values));
+                dc.dataRows.Add(new DataRow(dc, values));
             }
 
 
