@@ -1,12 +1,121 @@
 ﻿<Window x:Class="FridgeLabReport.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:FridgeLabReport"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="FridgeLab Report"
+        Height="720"
+        Width="1000"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <!-- Шапка -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="220"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="TbFilePath"
+                     Grid.Column="0"
+                     Margin="0,0,10,0"
+                     IsReadOnly="True"
+                     VerticalContentAlignment="Center"/>
+
+            <Button x:Name="BtnOpenFile"
+                    Grid.Column="1"
+                    Margin="0,0,10,0"
+                    Content="Выбрать файл"
+                    Click="BtnOpenFile_Click"/>
+
+            <TextBlock x:Name="TbStatus"
+                       Grid.Column="2"
+                       VerticalAlignment="Center"
+                       Text="Файл не выбран"/>
+        </Grid>
+
+        <!-- Диапазон -->
+        <GroupBox Grid.Row="1" Header="Диапазон данных" Margin="0,0,0,10">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Text="От"/>
+
+                <ComboBox x:Name="CbFrom"
+                          Grid.Column="1"
+                          Margin="6,0,12,0"/>
+
+                <TextBlock Grid.Column="2"
+                           VerticalAlignment="Center"
+                           Text="До"/>
+
+                <ComboBox x:Name="CbTo"
+                          Grid.Column="3"
+                          Margin="6,0,12,0"/>
+
+                <Button x:Name="BtnApplyRange"
+                        Grid.Column="4"
+                        Content="Применить"
+                        Click="BtnApplyRange_Click"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Конфигурация -->
+        <GroupBox Grid.Row="2" Header="Конфигурация" Margin="0,0,0,10">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Text="Количество температурных точек"/>
+
+                <ComboBox x:Name="CbTCount"
+                          Grid.Column="1"
+                          SelectedIndex="0"
+                          SelectionChanged="CbTCount_SelectionChanged">
+                    <ComboBoxItem Content="15"/>
+                    <ComboBoxItem Content="18"/>
+                    <ComboBoxItem Content="24"/>
+                    <ComboBoxItem Content="27"/>
+                </ComboBox>
+            </Grid>
+        </GroupBox>
+
+        <!-- Привязки -->
+        <GroupBox Grid.Row="3" Header="Привязка каналов" Margin="0,0,0,10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="BindingsPanel" Margin="10"/>
+            </ScrollViewer>
+        </GroupBox>
+
+        <!-- Кнопки -->
+        <StackPanel Grid.Row="4"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button x:Name="BtnBuildReport"
+                    Width="180"
+                    Height="32"
+                    Content="Сформировать отчёт"
+                    Click="BtnBuildReport_Click"/>
+        </StackPanel>
     </Grid>
 </Window>

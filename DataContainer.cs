@@ -31,8 +31,10 @@ namespace FridgeLabReport.Data
 
         private readonly List<DataRow> dataRows = new();
         public readonly IReadOnlyList<DataRow> DataRows;
+        public IReadOnlyCollection<string> Titles => ChannelMap.Keys;
         private DataContainer(long time)//чтобы запретить внешний конструктор
         {
+            
             this.time = time;
             DataRows = new ReadOnlyCollection<DataRow>(dataRows);
         }
@@ -122,6 +124,8 @@ namespace FridgeLabReport.Data
             private readonly DataContainer dc;
             private readonly long time;
             private readonly Dictionary<int, double> Values;
+
+            public long Time => time + dc.time;
 
             internal DataRow(DataContainer dataContainer, Dictionary<int, double> values)
             {
