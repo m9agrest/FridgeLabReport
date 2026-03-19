@@ -10,10 +10,38 @@ namespace FridgeLabReport.Data
         public enum DataField
         {
             Time,
+
+            // Схемные датчики
             T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,
             T11, T12, T13, T14, T15, T16, T17, T18, T19, T20,
             T21, T22, T23, T24, T25, T26, T27,
-            Power
+
+            // Камера
+            ChamberTemperature,
+            ChamberHumidity,
+
+            // Процессные каналы
+            Pc,
+            Pe,
+            TcFilter,
+            TeSuction,
+            TCompressor,
+            TCondInAir,
+            TCondOutAir,
+            TEvapInAir,
+            TEvapOutAir,
+
+            // Электрика
+            Voltage,
+            Current,
+            Frequency,
+            Power,
+
+            // Дополнительно
+            HeaterPower2,
+            DefrostPower,
+            DefrostTemperature1,
+            DefrostTemperature2
         }
         //считаем с 0 линии
         private const int lineTime = 1;//поле с временем. пример: "2026_02_05_10_19_17", есть еще 3853131557.882607, равноценно ли?
@@ -30,33 +58,70 @@ namespace FridgeLabReport.Data
         {
             { DataField.Time, "time" },
 
+            // Схемные датчики
             { DataField.T1, "C310" },
             { DataField.T2, "C311" },
-            { DataField.T3, "C312" },
-            { DataField.T4, "C313" },
-            { DataField.T5, "C314" },
-            { DataField.T6, "C315" },
-            { DataField.T7, "C316" },
-            { DataField.T8, "C317" },
-            { DataField.T9, "C318" },
-            { DataField.T10, "C319" },
-            { DataField.T11, "C320" },
-            { DataField.T12, "C321" },
-            { DataField.T13, "C322" },
-            { DataField.T14, "C323" },
-            { DataField.T15, "C324" },
-            { DataField.T16, "C325" },
-            { DataField.T17, "C326" },
-            { DataField.T18, "C327" },
-            { DataField.T19, "C328" },
-            { DataField.T20, "C329" },
-            { DataField.T21, "C330" },
-            { DataField.T22, "C331" },
-            { DataField.T23, "C332" },
-            { DataField.T24, "C333" },
-            { DataField.T25, "C334" },
-            { DataField.T26, "C335" },
-            { DataField.T27, "C336" }
+            { DataField.T3, "C320" },
+            { DataField.T4, "C321" },
+            { DataField.T5, "C330" },
+            { DataField.T6, "C331" },
+            { DataField.T7, "C340" },
+            { DataField.T8, "C341" },
+            { DataField.T9, "C342" },
+            { DataField.T10, "C350" },
+
+            { DataField.T11, "C351" },
+            { DataField.T12, "C352" },
+            { DataField.T13, "C353" },
+            { DataField.T14, "C360" },
+            { DataField.T15, "C361" },
+            { DataField.T16, "C370" },
+            { DataField.T17, "C371" },
+            { DataField.T18, "C380" },
+            { DataField.T19, "C381" },
+            { DataField.T20, "C390" },
+
+            { DataField.T21, "C391" },
+            { DataField.T22, "C400" },
+            { DataField.T23, "C401" },
+            { DataField.T24, "C410" },
+            { DataField.T25, "C411" },
+            { DataField.T26, "C420" },
+            { DataField.T27, "C421" },
+
+            // Камера
+            { DataField.ChamberTemperature, "C531" },
+            { DataField.ChamberHumidity, "C532" },
+
+            // Процессные каналы
+            // Pc / Pe — наиболее вероятные кандидаты по данным
+            { DataField.Pc, "C533" },
+            { DataField.Pe, "C534" },
+
+            // Эти каналы я привязываю как РАБОЧУЮ предварительную карту
+            // потому что они похожи на отдельные процессные температуры,
+            // а не на T1..T27 со схемы
+            { DataField.TcFilter, "C550" },
+            { DataField.TeSuction, "C551" },
+            { DataField.TCompressor, "C552" },
+            { DataField.TCondInAir, "C553" },
+            { DataField.TCondOutAir, "C554" },
+            { DataField.TEvapInAir, "C555" },
+            { DataField.TEvapOutAir, "C623" },
+
+            // Электрика
+            { DataField.Voltage, "C460" },
+            { DataField.Current, "C461" },
+            { DataField.Frequency, "C463" },
+
+            // Мощность — как рабочий основной канал
+            { DataField.Power, "C559" },
+
+            // Дополнительно
+            { DataField.HeaterPower2, "C569" },
+            { DataField.DefrostPower, "C628" },
+            { DataField.DefrostTemperature1, "C626" },
+            { DataField.DefrostTemperature2, "C629" }
         };
 
         private readonly List<DataRow> dataRows = new();
