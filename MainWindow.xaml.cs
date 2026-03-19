@@ -1,5 +1,6 @@
 ﻿using FridgeLabReport.Data;
 using Microsoft.Win32;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -9,6 +10,11 @@ namespace FridgeLabReport
     {
         private DataContainer? dc;
 
+        private long minTime;
+        private long maxTime;
+        private long selectedFrom;
+        private long selectedTo;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -17,22 +23,29 @@ namespace FridgeLabReport
 
         private void SetDisabledState()
         {
-            CbFrom.IsEnabled = false;
-            CbTo.IsEnabled = false;
+            DpFromDate.IsEnabled = false;
+            TbFromTime.IsEnabled = false;
+            DpToDate.IsEnabled = false;
+            TbToTime.IsEnabled = false;
             BtnApplyRange.IsEnabled = false;
             BtnBuildReport.IsEnabled = false;
 
-            CbFrom.ItemsSource = null;
-            CbTo.ItemsSource = null;
-            BindingsPanel.Children.Clear();
+            DpFromDate.SelectedDate = null;
+            DpToDate.SelectedDate = null;
+            TbFromTime.Text = "";
+            TbToTime.Text = "";
+            TbRangeLimit.Text = "";
 
+            BindingsPanel.Children.Clear();
             TbStatus.Text = "Файл не выбран";
         }
 
         private void SetEnabledState()
         {
-            CbFrom.IsEnabled = true;
-            CbTo.IsEnabled = true;
+            DpFromDate.IsEnabled = true;
+            TbFromTime.IsEnabled = true;
+            DpToDate.IsEnabled = true;
+            TbToTime.IsEnabled = true;
             BtnApplyRange.IsEnabled = true;
             BtnBuildReport.IsEnabled = true;
         }
@@ -53,13 +66,22 @@ namespace FridgeLabReport
             {
                 dc = DataContainer.GenerateFromPath(dialog.FileName);
 
+                if (dc.DataRows.Count == 0)
+                    throw new ArgumentException("После парсинга не найдено ни одной строки данных");
+
                 TbFilePath.Text = dialog.FileName;
-                TbStatus.Text = $"Загружено строк: {dc.DataRows.Count}";
 
-                FillRangeBoxes();
+                minTime = dc.DataRows[0].Time;
+                maxTime = dc.DataRows[dc.DataRows.Count - 1].Time;
+
+                selectedFrom = minTime;
+                selectedTo = maxTime;
+
+                FillDateTimeFields();
                 RebuildBindings();
-
                 SetEnabledState();
+
+                TbStatus.Text = $"Загружено строк: {dc.DataRows.Count}";
             }
             catch (Exception ex)
             {
@@ -72,19 +94,64 @@ namespace FridgeLabReport
             }
         }
 
-        private void FillRangeBoxes()
+        private void FillDateTimeFields()
         {
-            if (dc == null || dc.DataRows.Count == 0)
-                return;
+            SetDateTimeToControls(DpFromDate, TbFromTime, minTime);
+            SetDateTimeToControls(DpToDate, TbToTime, maxTime);
 
-            CbFrom.ItemsSource = dc.DataRows;
-            CbTo.ItemsSource = dc.DataRows;
+            DateTime minDt = FromUnixMs(minTime);
+            DateTime maxDt = FromUnixMs(maxTime);
 
-            CbFrom.DisplayMemberPath = "Time";
-            CbTo.DisplayMemberPath = "Time";
+            DpFromDate.DisplayDateStart = minDt.Date;
+            DpFromDate.DisplayDateEnd = maxDt.Date;
+            DpToDate.DisplayDateStart = minDt.Date;
+            DpToDate.DisplayDateEnd = maxDt.Date;
 
-            CbFrom.SelectedIndex = 0;
-            CbTo.SelectedIndex = dc.DataRows.Count - 1;
+            TbRangeLimit.Text =
+                $"Доступный диапазон: {minDt:dd.MM.yyyy HH:mm:ss.fff} — {maxDt:dd.MM.yyyy HH:mm:ss.fff}";
+        }
+
+        private void SetDateTimeToControls(DatePicker datePicker, TextBox timeBox, long unixMs)
+        {
+            DateTime dt = FromUnixMs(unixMs);
+            datePicker.SelectedDate = dt.Date;
+            timeBox.Text = dt.ToString("HH:mm:ss.fff");
+        }
+
+        private DateTime FromUnixMs(long unixMs)
+        {
+            return DateTimeOffset.FromUnixTimeMilliseconds(unixMs).LocalDateTime;
+        }
+
+        private bool TryReadDateTime(DatePicker datePicker, TextBox timeBox, out long unixMs)
+        {
+            unixMs = 0;
+
+            if (datePicker.SelectedDate == null)
+                return false;
+
+            string rawTime = timeBox.Text.Trim();
+
+            string[] formats =
+            {
+                @"hh\:mm\:ss",
+                @"hh\:mm\:ss\.f",
+                @"hh\:mm\:ss\.ff",
+                @"hh\:mm\:ss\.fff"
+            };
+
+            if (!TimeSpan.TryParseExact(
+                    rawTime,
+                    formats,
+                    CultureInfo.InvariantCulture,
+                    out TimeSpan timePart))
+            {
+                return false;
+            }
+
+            DateTime dt = datePicker.SelectedDate.Value.Date + timePart;
+            unixMs = new DateTimeOffset(dt).ToUnixTimeMilliseconds();
+            return true;
         }
 
         private void RebuildBindings()
@@ -97,9 +164,7 @@ namespace FridgeLabReport
             int tCount = GetSelectedTCount();
 
             for (int i = 0; i < tCount; i++)
-            {
                 AddBindingRow((DataContainer.DataField)i);
-            }
 
             AddBindingRow(DataContainer.DataField.Power);
         }
@@ -111,7 +176,7 @@ namespace FridgeLabReport
 
             Grid row = new Grid()
             {
-                Margin = new Thickness(0, 0, 0, 6),
+                Margin = new Thickness(0, 0, 0, 6)
             };
 
             row.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(140) });
@@ -125,8 +190,7 @@ namespace FridgeLabReport
 
             ComboBox combo = new ComboBox()
             {
-                ItemsSource = dc.Titles,
-                Tag = field
+                ItemsSource = dc.Titles
             };
 
             Grid.SetColumn(title, 0);
@@ -165,20 +229,42 @@ namespace FridgeLabReport
             if (dc == null)
                 return;
 
-            if (CbFrom.SelectedItem is not DataContainer.DataRow rowFrom ||
-                CbTo.SelectedItem is not DataContainer.DataRow rowTo)
+            if (!TryReadDateTime(DpFromDate, TbFromTime, out long from))
             {
-                MessageBox.Show("Выбери диапазон.", "Диапазон", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Некорректное время \"От\".\nФормат: HH:mm:ss.fff",
+                    "Диапазон", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            long from = Math.Min(rowFrom.Time, rowTo.Time);
-            long to = Math.Max(rowFrom.Time, rowTo.Time);
+            if (!TryReadDateTime(DpToDate, TbToTime, out long to))
+            {
+                MessageBox.Show("Некорректное время \"До\".\nФормат: HH:mm:ss.fff",
+                    "Диапазон", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (from < minTime) from = minTime;
+            if (from > maxTime) from = maxTime;
+            if (to < minTime) to = minTime;
+            if (to > maxTime) to = maxTime;
+
+            if (from > to)
+            {
+                long temp = from;
+                from = to;
+                to = temp;
+            }
+
+            selectedFrom = from;
+            selectedTo = to;
+
+            SetDateTimeToControls(DpFromDate, TbFromTime, selectedFrom);
+            SetDateTimeToControls(DpToDate, TbToTime, selectedTo);
 
             int count = 0;
             foreach (var row in dc.DataRows)
             {
-                if (row.Time >= from && row.Time <= to)
+                if (row.Time >= selectedFrom && row.Time <= selectedTo)
                     count++;
             }
 
@@ -190,17 +276,10 @@ namespace FridgeLabReport
             if (dc == null)
                 return;
 
-            if (CbFrom.SelectedItem is not DataContainer.DataRow rowFrom ||
-                CbTo.SelectedItem is not DataContainer.DataRow rowTo)
-            {
-                MessageBox.Show("Выбери диапазон.", "Диапазон", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            long from = Math.Min(rowFrom.Time, rowTo.Time);
-            long to = Math.Max(rowFrom.Time, rowTo.Time);
-
-            string text = $"От: {from}\nДо: {to}\n\nПривязки:\n";
+            string text =
+                $"От: {FromUnixMs(selectedFrom):dd.MM.yyyy HH:mm:ss.fff}\n" +
+                $"До: {FromUnixMs(selectedTo):dd.MM.yyyy HH:mm:ss.fff}\n\n" +
+                $"Привязки:\n";
 
             foreach (var child in BindingsPanel.Children)
             {
