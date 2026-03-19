@@ -9,9 +9,11 @@ namespace FridgeLabReport.Data
     {
         public enum DataField
         {
+            Time,
             T1, T2, T3, T4, T5, T6, T7, T8, T9, T10,
-            T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21,
-            Time, Power
+            T11, T12, T13, T14, T15, T16, T17, T18, T19, T20,
+            T21, T22, T23, T24, T25, T26, T27,
+            Power
         }
         //считаем с 0 линии
         private const int lineTime = 1;//поле с временем. пример: "2026_02_05_10_19_17", есть еще 3853131557.882607, равноценно ли?
@@ -19,14 +21,42 @@ namespace FridgeLabReport.Data
         private const int lineData = 7;//с какой строки начинаются сами данные. пример: 430365.77607, n, n, ..., необходимо, так как шапка дублируется
 
 
-        private static readonly HashSet<string> trashData = new() { "n", "N", "NaN", "nan", "NaT", "nat", "", "9999", "-9999", "1" };//мусорные данные, которые необходимо отсекать при парсинге данных в double
+        private static readonly HashSet<string> trashData = new() { "n", "N", "NaN", "nan", "NaT", "nat", "", "9999", "-9999", "0" };//мусорные данные, которые необходимо отсекать при парсинге данных в double
 
 
         private readonly long time = 0;
         private readonly Dictionary<string, int> ChannelMap = new();
         private static readonly Dictionary<DataField, string> FieldToChannel = new()
         {
-            { DataField.Time, "time" }
+            { DataField.Time, "time" },
+
+            { DataField.T1, "C310" },
+            { DataField.T2, "C311" },
+            { DataField.T3, "C312" },
+            { DataField.T4, "C313" },
+            { DataField.T5, "C314" },
+            { DataField.T6, "C315" },
+            { DataField.T7, "C316" },
+            { DataField.T8, "C317" },
+            { DataField.T9, "C318" },
+            { DataField.T10, "C319" },
+            { DataField.T11, "C320" },
+            { DataField.T12, "C321" },
+            { DataField.T13, "C322" },
+            { DataField.T14, "C323" },
+            { DataField.T15, "C324" },
+            { DataField.T16, "C325" },
+            { DataField.T17, "C326" },
+            { DataField.T18, "C327" },
+            { DataField.T19, "C328" },
+            { DataField.T20, "C329" },
+            { DataField.T21, "C330" },
+            { DataField.T22, "C331" },
+            { DataField.T23, "C332" },
+            { DataField.T24, "C333" },
+            { DataField.T25, "C334" },
+            { DataField.T26, "C335" },
+            { DataField.T27, "C336" }
         };
 
         private readonly List<DataRow> dataRows = new();
@@ -38,6 +68,9 @@ namespace FridgeLabReport.Data
             this.time = time;
             DataRows = new ReadOnlyCollection<DataRow>(dataRows);
         }
+
+        public bool IsPresetField(DataField field) => FieldToChannel.ContainsKey(field);
+        public string GetField(DataField field) => FieldToChannel[field];
 
 
         public static DataContainer GenerateFromPath(string path) => GenerateFromData(File.ReadAllText(path));

@@ -193,6 +193,9 @@ namespace FridgeLabReport
                 ItemsSource = dc.Titles
             };
 
+            if (dc.IsPresetField(field))
+                combo.SelectedItem = dc.GetField(field);
+
             Grid.SetColumn(title, 0);
             Grid.SetColumn(combo, 1);
 
