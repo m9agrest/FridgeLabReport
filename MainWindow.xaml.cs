@@ -163,13 +163,39 @@ namespace FridgeLabReport
 
             int tCount = GetSelectedTCount();
 
-            for (int i = 0; i < tCount; i++)
-                AddBindingRow((DataContainer.DataField)i);
+            AddBindingRow(DataContainer.DataField.Time, "Время");
 
-            AddBindingRow(DataContainer.DataField.Power);
+            for (int i = 0; i < tCount; i++)
+            {
+                var field = (DataContainer.DataField)i + 1; // потому что Time теперь первый
+                AddBindingRow(field, $"T{i + 1}");
+            }
+
+            AddBindingRow(DataContainer.DataField.ChamberTemperature, "Температура камеры");
+            AddBindingRow(DataContainer.DataField.ChamberHumidity, "Влажность камеры");
+
+            AddBindingRow(DataContainer.DataField.Pc, "Pc");
+            AddBindingRow(DataContainer.DataField.Pe, "Pe");
+            AddBindingRow(DataContainer.DataField.TcFilter, "Температура фильтра");
+            AddBindingRow(DataContainer.DataField.TeSuction, "Температура всасывания");
+            AddBindingRow(DataContainer.DataField.TCompressor, "Температура компрессора");
+            AddBindingRow(DataContainer.DataField.TCondInAir, "Воздух на входе конденсатора");
+            AddBindingRow(DataContainer.DataField.TCondOutAir, "Воздух на выходе конденсатора");
+            AddBindingRow(DataContainer.DataField.TEvapInAir, "Воздух на входе испарителя");
+            AddBindingRow(DataContainer.DataField.TEvapOutAir, "Воздух на выходе испарителя");
+
+            AddBindingRow(DataContainer.DataField.Voltage, "Напряжение");
+            AddBindingRow(DataContainer.DataField.Current, "Ток");
+            AddBindingRow(DataContainer.DataField.Frequency, "Частота");
+            AddBindingRow(DataContainer.DataField.Power, "Мощность");
+
+            AddBindingRow(DataContainer.DataField.HeaterPower2, "Мощность нагревателя 2");
+            AddBindingRow(DataContainer.DataField.DefrostPower, "Мощность оттайки");
+            AddBindingRow(DataContainer.DataField.DefrostTemperature1, "Температура оттайки 1");
+            AddBindingRow(DataContainer.DataField.DefrostTemperature2, "Температура оттайки 2");
         }
 
-        private void AddBindingRow(DataContainer.DataField field)
+        private void AddBindingRow(DataContainer.DataField field, string name)
         {
             if (dc == null)
                 return;
@@ -179,12 +205,12 @@ namespace FridgeLabReport
                 Margin = new Thickness(0, 0, 0, 6)
             };
 
-            row.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(140) });
+            row.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(260) });
             row.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(220) });
 
             TextBlock title = new TextBlock()
             {
-                Text = field.ToString(),
+                Text = name,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
