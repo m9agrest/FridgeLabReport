@@ -224,7 +224,7 @@ namespace FridgeLabReport.Data
             private readonly Dictionary<int, double> Values;
 
             public long Time => time + dc.time;
-            public long LocalTime => time - DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            public long LocalTime => time;
 
             internal DataRow(DataContainer dataContainer, Dictionary<int, double> values)
             {

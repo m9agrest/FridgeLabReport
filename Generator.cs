@@ -25,7 +25,7 @@ namespace FridgeLabReport
                 int rowStart = 0;
                 int rowEnd = 0;
 
-                setCell(ws, line, ref row, toDate(data.LocalTime, "HH:mm:ss"));//hh:mm:ss
+                setCell(ws, line, ref row, toDateSec(data.LocalTime, "HH:mm:ss"));//hh:mm:ss
                 setCell(ws, line, ref row, toDate(data.Time, "dd.MM.yyyy"));//dd:mm:yyyy
                 setCell(ws, line, ref row, toDate(data.Time, "HH:mm:ss"));//hh:mm:ss
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.Pc]]);
@@ -41,7 +41,13 @@ namespace FridgeLabReport
                 rowStart = Row0 + row;
                 for (int i = 1; i <= Tcount; i++)
                 {
-                    setCell(ws, line, ref row, data[fields[(DataContainer.DataField)i]]);
+                    XLColor color = XLColor.FromHtml("#C2C8FF");
+                    if (i > 5) color = XLColor.FromHtml("#CCFFC2");
+                    if (i > 10) color = XLColor.FromHtml("#FFFBC2");
+                    if (i > 15) color = XLColor.FromHtml("#FFC2F3");
+                    if (i > 20) color = XLColor.FromHtml("#C2F0FF");
+                    if (i > 25) color = XLColor.FromHtml("#FFC2C2");
+                    setCell(ws, line, ref row, data[fields[(DataContainer.DataField)i]], color);
                 }
                 rowEnd = Row0 + row - 1;
                 string rangeT = $"{XLHelper.GetColumnLetterFromNumber(rowStart)}{Line0 + line}:{XLHelper.GetColumnLetterFromNumber(rowEnd)}{Line0 + line}";
@@ -132,6 +138,11 @@ namespace FridgeLabReport
             row++;
         }
 
+        private static string toDateSec(long time, string format)
+        {
+            DateTime dt = new DateTime().AddMilliseconds(time);//    DateTimeOffset.FromUnixTimeMilliseconds(time).LocalDateTime;
+            return dt.ToString(format);
+        }
         private static string toDate(long time, string format)
         {
             DateTime dt = DateTimeOffset.FromUnixTimeMilliseconds(time).LocalDateTime;
