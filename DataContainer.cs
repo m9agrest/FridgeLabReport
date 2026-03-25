@@ -17,31 +17,31 @@ namespace FridgeLabReport.Data
             T21, T22, T23, T24, T25, T26, T27,
 
             // Камера
-            ChamberTemperature,
-            ChamberHumidity,
+            ChamberTemperature, // Температура в камере
+            ChamberHumidity, // Влажность в камере
 
             // Процессные каналы
-            Pc,
-            Pe,
-            TcFilter,
-            TeSuction,
-            TCompressor,
-            TCondInAir,
-            TCondOutAir,
-            TEvapInAir,
-            TEvapOutAir,
+            Pc, // Давление конденсации
+            Pe, // Давление кипения
+            TcFilter, // Температура на фильтре
+            TeSuction, // Температура на всасывании
+            TCompressor, // Температура компрессора
+            TCondInAir, // Вход в конденсатор (воздух)
+            TCondOutAir, // Выход из конденсатора (воздух)
+            TEvapInAir, // Вход в испаритель (воздух)
+            TEvapOutAir, // Выход из испарителя (воздух)
 
             // Электрика
-            Voltage,
-            Current,
-            Frequency,
-            Power,
+            Voltage, // Напряжение
+            Current, // Ток
+            Frequency, // Частота
+            Power, // Мощность
 
             // Дополнительно
-            HeaterPower2,
-            DefrostPower,
-            DefrostTemperature1,
-            DefrostTemperature2
+            HeaterPower2, // Мощность второго нагревателя
+            DefrostPower, // Мощность оттайки
+            DefrostTemperature1, // Температура датчика оттайки 1
+            DefrostTemperature2, // Температура датчика оттайки 2
         }
         //считаем с 0 линии
         private const int lineTime = 1;//поле с временем. пример: "2026_02_05_10_19_17", есть еще 3853131557.882607, равноценно ли?
@@ -224,6 +224,7 @@ namespace FridgeLabReport.Data
             private readonly Dictionary<int, double> Values;
 
             public long Time => time + dc.time;
+            public long LocalTime => time - DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             internal DataRow(DataContainer dataContainer, Dictionary<int, double> values)
             {

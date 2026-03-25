@@ -1,6 +1,7 @@
 ﻿using FridgeLabReport.Data;
 using Microsoft.Win32;
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -216,7 +217,8 @@ namespace FridgeLabReport
 
             ComboBox combo = new ComboBox()
             {
-                ItemsSource = dc.Titles
+                ItemsSource = dc.Titles,
+                Tag = field
             };
 
             if (dc.IsPresetField(field))
@@ -305,27 +307,48 @@ namespace FridgeLabReport
             if (dc == null)
                 return;
 
-            string text =
-                $"От: {FromUnixMs(selectedFrom):dd.MM.yyyy HH:mm:ss.fff}\n" +
-                $"До: {FromUnixMs(selectedTo):dd.MM.yyyy HH:mm:ss.fff}\n\n" +
-                $"Привязки:\n";
+            Dictionary<DataContainer.DataField, string> fields = new();
 
             foreach (var child in BindingsPanel.Children)
             {
                 if (child is not Grid row || row.Children.Count < 2)
                     continue;
 
-                if (row.Children[0] is not TextBlock title)
-                    continue;
-
                 if (row.Children[1] is not ComboBox combo)
                     continue;
 
-                string channel = combo.SelectedItem?.ToString() ?? "(не выбрано)";
-                text += $"{title.Text} -> {channel}\n";
+                if (combo.Tag is not DataContainer.DataField field)
+                    continue;
+
+                if (combo.SelectedItem is not string channelName)
+                    continue;
+
+                fields[field] = channelName;
             }
 
-            MessageBox.Show(text, "Заглушка отчёта", MessageBoxButton.OK, MessageBoxImage.Information);
+            List<DataContainer.DataRow> dataRows = dc.DataRows
+                .Where(x => x.Time >= selectedFrom && x.Time <= selectedTo)
+                .ToList();
+
+            int tCount = GetSelectedTCount();
+
+            string sourceFileName = Path.GetFileNameWithoutExtension(TbFilePath.Text);
+            if (string.IsNullOrWhiteSpace(sourceFileName))
+                sourceFileName = "report";
+
+            SaveFileDialog dialog = new SaveFileDialog()
+            {
+                Filter = "Excel file (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx",
+                AddExtension = true,
+                FileName = sourceFileName + ".xlsx",
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            Generator.GenerateXlsx(dialog.FileName, tCount, fields, dataRows);
         }
     }
 }
