@@ -1,5 +1,6 @@
 ﻿using FridgeLabReport.Data;
 using Microsoft.Win32;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -51,7 +52,7 @@ namespace FridgeLabReport
             BtnBuildReport.IsEnabled = true;
         }
 
-        private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
+        private async void BtnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog()
             {
@@ -63,12 +64,24 @@ namespace FridgeLabReport
             if (dialog.ShowDialog() != true)
                 return;
 
+            BusyWindow busyWindow = new BusyWindow("Читаем файл...")
+            {
+                Owner = this
+            };
+
             try
             {
-                dc = DataContainer.GenerateFromPath(dialog.FileName);
+                busyWindow.Show();
 
-                if (dc.DataRows.Count == 0)
+                DataContainer loadedDc = await Task.Run(() =>
+                {
+                    return DataContainer.GenerateFromPath(dialog.FileName);
+                });
+
+                if (loadedDc.DataRows.Count == 0)
                     throw new ArgumentException("После парсинга не найдено ни одной строки данных");
+
+                dc = loadedDc;
 
                 TbFilePath.Text = dialog.FileName;
 
@@ -92,6 +105,10 @@ namespace FridgeLabReport
 
                 TbStatus.Text = "Ошибка загрузки";
                 MessageBox.Show(ex.Message, "Ошибка парсинга", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                busyWindow.Close();
             }
         }
 
@@ -302,7 +319,7 @@ namespace FridgeLabReport
             TbStatus.Text = $"Диапазон: {count} строк";
         }
 
-        private void BtnBuildReport_Click(object sender, RoutedEventArgs e)
+        private async void BtnBuildReport_Click(object sender, RoutedEventArgs e)
         {
             if (dc == null)
                 return;
@@ -348,7 +365,48 @@ namespace FridgeLabReport
             if (dialog.ShowDialog() != true)
                 return;
 
-            Generator.GenerateXlsx(dialog.FileName, tCount, fields, dataRows);
+            BusyWindow busyWindow = new BusyWindow("Генерируем файл...")
+            {
+                Owner = this
+            };
+
+            try
+            {
+                busyWindow.Show();
+
+                await Task.Run(() =>
+                {
+                    Generator.GenerateXlsx(dialog.FileName, tCount, fields, dataRows);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Ошибка при генерации файла:\n" + ex.Message,
+                    "Ошибка",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+            finally
+            {
+                busyWindow.Close();
+            }
+
+            MessageBoxResult result = MessageBox.Show(this,
+                "Файл успешно сгенерирован.\n\nОткрыть его?",
+                "Готово",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+
+            if (result == MessageBoxResult.Yes && File.Exists(dialog.FileName))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = dialog.FileName,
+                    UseShellExecute = true
+                });
+            }
         }
     }
 }
