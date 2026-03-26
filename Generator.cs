@@ -9,11 +9,11 @@ namespace FridgeLabReport
         private const int Line0 = 25;
         private const int Row0 = 2;
 
-        private const int LineMinMaxAverage = 3;
-        private const int RowStartMinMaxAverage = 5;
-        private const int RowMin = 7;
-        private const int RowMax = 8;
-        private const int RowAverage = 9;
+        private const int LineMinMaxAverage = 3;//линия для колонки подсчетов минимума максима и среднего
+        private const int RowStartMinMaxAverage = 5;//с какой колонки будет заполнять // основная таблица, начало полезных данных
+        private const int RowMin = 7;//колонка для подсчета минимума
+        private const int RowMax = 8;//колонка для подсчета максимума
+        private const int RowAverage = 9;//колонка для подсчета среднего
 
 
         public static void GenerateXlsx(
@@ -30,6 +30,7 @@ namespace FridgeLabReport
 
             ApplyWorkbookMetadata(ws, settings);
 
+            /*********    Генерируем основную таблицу     *********/
 
             bool isPowerMin = false;
             for (int line = 0; line < dataRows.Count; line++)
@@ -49,11 +50,11 @@ namespace FridgeLabReport
 
 
                 double tCompressor = data[fields[DataContainer.DataField.TCompressor]];
-                if(settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)
+                if(settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)//TCompressor ниже минимума
                 {
                     setCell(ws, line, ref row, tCompressor, XLColor.DarkRed);
                 }
-                else
+                else//TCompressor выше минимума
                 {
                     setCell(ws, line, ref row, tCompressor, XLColor.FromHtml("#F4B183"));
                 }
@@ -66,6 +67,7 @@ namespace FridgeLabReport
                 rowStart = Row0 + row;
                 for (int i = 1; i <= Tcount; i++)
                 {
+                    //каждые 5 колонок у Т, меняем цвет
                     XLColor color = XLColor.FromHtml("#C2C8FF");
                     if (i > 5) color = XLColor.FromHtml("#CCFFC2");
                     if (i > 10) color = XLColor.FromHtml("#FFFBC2");
@@ -83,14 +85,15 @@ namespace FridgeLabReport
                 double power = data[fields[DataContainer.DataField.Power]];
 
 
-                bool setYellow = false;
+                bool setYellow = false;//нужно ли рисовать линию
                 int setYellowLineStart = 0;
-                if (settings != null && settings.MinPowerHighlight.HasValue && power < settings.MinPowerHighlight.Value)
+
+                if (settings != null && settings.MinPowerHighlight.HasValue && power < settings.MinPowerHighlight.Value)//мощность ниже минимума
                 {
                     setCell(ws, line, ref row, power, XLColor.Yellow);
                     if (!isPowerMin)
                     {
-                        if(line > 0)
+                        if(line > 0)//если не первая строка, то нужно рисовать линию
                         {
                             setYellow = true;
                             setYellowLineStart = Line0 + line;
@@ -98,12 +101,12 @@ namespace FridgeLabReport
                     }
                     isPowerMin = true;
                 }
-                else
+                else//мощность выше минимума
                 {
                     setCell(ws, line, ref row, power);
                     if (isPowerMin)
                     {
-                        if(line < dataRows.Count - 1)
+                        if(line < dataRows.Count - 1)//если не последняя строка, то нужно рисовать линию
                         {
                             setYellow = true;
                             setYellowLineStart = Line0 + line - 1;
@@ -116,10 +119,12 @@ namespace FridgeLabReport
                 int r0 = Row0 + row;
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.ChamberTemperature]], XLColor.FromHtml("#BFBFBF"));
 
+                //мин макс и сред значение по линии от Т1 до Tcount
                 setCellFormule(ws, line, ref row, $"MIN({rangeT})", XLColor.FromHtml("#DEEBF7"));
                 setCellFormule(ws, line, ref row, $"AVERAGE({rangeT})", XLColor.FromHtml("#DEEBF7"));
                 setCellFormule(ws, line, ref row, $"MAX({rangeT})", XLColor.FromHtml("#DEEBF7"));
 
+                //генерируем формулы последних 5 колонок
                 int l = Line0 + line;
                 int r1 = Row0 + row;
                 setCellFormule(ws, line, ref row, $"-42.5094 + 22.9586 * LN(E{l}) + 2.066199 * LN(E{l}) ^ 2 + 0.462774 * LN(E{l}) ^ 3");
@@ -138,7 +143,9 @@ namespace FridgeLabReport
                 }
             }
 
+            /********   Генерируем таблицу мин макс сред значений по основной таблице    *******/
 
+            //заполняем записи, до Т1
             for (int i = 0; i < 9; i++)
             {
                 int row = RowStartMinMaxAverage + i;
@@ -148,6 +155,9 @@ namespace FridgeLabReport
                 ws.Cell(LineMinMaxAverage + i, RowAverage).FormulaA1 = $"AVERAGE({columns})";
             }
 
+            //пропускаем от Т1 до Tcount
+
+            //пишем 5 значений до 3 колонок мин мак сред в строках Т1 - Tcount
             for (int i = 0; i < 5; i++)
             {
                 int row = RowStartMinMaxAverage + i + 9 + Tcount;
@@ -157,6 +167,9 @@ namespace FridgeLabReport
                 ws.Cell(LineMinMaxAverage + i + 9, RowAverage).FormulaA1 = $"AVERAGE({columns})";
             }
 
+            //пропускам 3 колонки мин мак сред в строках Т1 - Tcount
+
+            //пишем 5 полследних колонок
             for (int i = 0; i < 5; i++)
             {
                 int row = RowStartMinMaxAverage + i + 9 + 5 + 3 + Tcount;
@@ -173,6 +186,8 @@ namespace FridgeLabReport
             wb.SaveAs(path);
         }
 
+
+        //отрисовывает желтую строку
         private static void ApplyWorkbookMetadata(IXLWorksheet ws, ReportSettings? settings)
         {
             if(settings != null)
@@ -193,22 +208,6 @@ namespace FridgeLabReport
         }
 
 
-
-
-        private static bool TryGetFieldValue(
-            DataContainer.DataRow data,
-            Dictionary<DataContainer.DataField, string> fields,
-            DataContainer.DataField field,
-            out double value)
-        {
-            value = default;
-
-            if (!fields.TryGetValue(field, out string? channelName))
-                return false;
-
-            value = data[channelName];
-            return true;
-        }
 
         private static void setCell(IXLWorksheet ws, int line, ref int row, double data, XLColor? color = null)
         {
