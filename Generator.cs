@@ -1,23 +1,37 @@
 ﻿using ClosedXML.Excel;
-using ClosedXML.Parser;
 using FridgeLabReport.Data;
 using System.IO;
-using System.Windows.Controls;
 
 namespace FridgeLabReport
 {
     internal static class Generator
     {
-        const int Line0 = 24;
-        const int Row0 = 2;
+        private const int Line0 = 25;
+        private const int Row0 = 2;
 
-        public static void GenerateXlsx(string path, int Tcount, Dictionary<DataContainer.DataField, string> fields, List<DataContainer.DataRow> dataRows)
+        private const int LineMinMaxAverage = 3;
+        private const int RowStartMinMaxAverage = 5;
+        private const int RowMin = 7;
+        private const int RowMax = 8;
+        private const int RowAverage = 9;
+
+
+        public static void GenerateXlsx(
+            string path,
+            int Tcount,
+            Dictionary<DataContainer.DataField, string> fields,
+            List<DataContainer.DataRow> dataRows,
+            ReportSettings? settings = null)
         {
-            
+            //settings ??= new ReportSettings();
+
             using var wb = new XLWorkbook(Path.Combine(AppContext.BaseDirectory, "Templates", $"t{Tcount}.xlsx"));
             IXLWorksheet ws = wb.Worksheet(1);
 
-            //читаем файл 't' + Tcount + ".xlsx";
+            ApplyWorkbookMetadata(ws, settings);
+
+
+            bool isPowerMin = false;
             for (int line = 0; line < dataRows.Count; line++)
             {
                 DataContainer.DataRow data = dataRows[line];
@@ -25,14 +39,25 @@ namespace FridgeLabReport
                 int rowStart = 0;
                 int rowEnd = 0;
 
-                setCell(ws, line, ref row, toDateSec(data.LocalTime, "HH:mm:ss"));//hh:mm:ss
-                setCell(ws, line, ref row, toDate(data.Time, "dd.MM.yyyy"));//dd:mm:yyyy
-                setCell(ws, line, ref row, toDate(data.Time, "HH:mm:ss"));//hh:mm:ss
+                setCell(ws, line, ref row, toDateSec(data.LocalTime, "HH:mm:ss"));
+                setCell(ws, line, ref row, toDate(data.Time, "dd.MM.yyyy"));
+                setCell(ws, line, ref row, toDate(data.Time, "HH:mm:ss"));
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.Pc]]);
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.Pe]]);
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.TcFilter]]);
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.TeSuction]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TCompressor]], XLColor.FromHtml("#F4B183"));
+
+
+                double tCompressor = data[fields[DataContainer.DataField.TCompressor]];
+                if(settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)
+                {
+                    setCell(ws, line, ref row, tCompressor, XLColor.DarkRed);
+                }
+                else
+                {
+                    setCell(ws, line, ref row, tCompressor, XLColor.FromHtml("#F4B183"));
+                }
+
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.TCondInAir]]);
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.TCondOutAir]]);
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.TEvapInAir]], XLColor.FromHtml("#70AD47"));
@@ -54,7 +79,39 @@ namespace FridgeLabReport
 
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.Voltage]]);
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.Current]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.Power]]);
+
+                double power = data[fields[DataContainer.DataField.Power]];
+
+
+                bool setYellow = false;
+                int setYellowLineStart = 0;
+                if (settings != null && settings.MinPowerHighlight.HasValue && power < settings.MinPowerHighlight.Value)
+                {
+                    setCell(ws, line, ref row, power, XLColor.Yellow);
+                    if (!isPowerMin)
+                    {
+                        if(line > 0)
+                        {
+                            setYellow = true;
+                            setYellowLineStart = Line0 + line;
+                        }
+                    }
+                    isPowerMin = true;
+                }
+                else
+                {
+                    setCell(ws, line, ref row, power);
+                    if (isPowerMin)
+                    {
+                        if(line < dataRows.Count - 1)
+                        {
+                            setYellow = true;
+                            setYellowLineStart = Line0 + line - 1;
+                        }
+                    }
+                    isPowerMin = false;
+                }
+
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.ChamberHumidity]], XLColor.FromHtml("#BFBFBF"));
                 int r0 = Row0 + row;
                 setCell(ws, line, ref row, data[fields[DataContainer.DataField.ChamberTemperature]], XLColor.FromHtml("#BFBFBF"));
@@ -71,11 +128,88 @@ namespace FridgeLabReport
                 setCellFormule(ws, line, ref row, $"{XLHelper.GetColumnLetterFromNumber(r1)}{l}-G{l}");
                 setCellFormule(ws, line, ref row, $"H{l}-{XLHelper.GetColumnLetterFromNumber(r2)}{l}");
                 setCellFormule(ws, line, ref row, $"{XLHelper.GetColumnLetterFromNumber(r1)}{l}-{XLHelper.GetColumnLetterFromNumber(r0)}{l}");
+
+
+
+
+                if (setYellow)
+                {
+                    SetYellowLine(ws, setYellowLineStart, Row0 + 3, Row0 + row - 1);
+                }
             }
 
-            wb.SaveAs(path);
 
+            for (int i = 0; i < 9; i++)
+            {
+                int row = RowStartMinMaxAverage + i;
+                string columns = $"{XLHelper.GetColumnLetterFromNumber(row)}{Line0}:{XLHelper.GetColumnLetterFromNumber(row)}{Line0 + dataRows.Count - 1}";
+                ws.Cell(LineMinMaxAverage + i, RowMin).FormulaA1 = $"MIN({columns})";
+                ws.Cell(LineMinMaxAverage + i, RowMax).FormulaA1 = $"MAX({columns})";
+                ws.Cell(LineMinMaxAverage + i, RowAverage).FormulaA1 = $"AVERAGE({columns})";
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                int row = RowStartMinMaxAverage + i + 9 + Tcount;
+                string columns = $"{XLHelper.GetColumnLetterFromNumber(row)}{Line0}:{XLHelper.GetColumnLetterFromNumber(row)}{Line0 + dataRows.Count - 1}";
+                ws.Cell(LineMinMaxAverage + i + 9, RowMin).FormulaA1 = $"MIN({columns})";
+                ws.Cell(LineMinMaxAverage + i + 9, RowMax).FormulaA1 = $"MAX({columns})";
+                ws.Cell(LineMinMaxAverage + i + 9, RowAverage).FormulaA1 = $"AVERAGE({columns})";
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                int row = RowStartMinMaxAverage + i + 9 + 5 + 3 + Tcount;
+                string columns = $"{XLHelper.GetColumnLetterFromNumber(row)}{Line0}:{XLHelper.GetColumnLetterFromNumber(row)}{Line0 + dataRows.Count - 1}";
+                ws.Cell(LineMinMaxAverage + i + 9 + 5, RowMin).FormulaA1 = $"MIN({columns})";
+                ws.Cell(LineMinMaxAverage + i + 9 + 5, RowMax).FormulaA1 = $"MAX({columns})";
+                ws.Cell(LineMinMaxAverage + i + 9 + 5, RowAverage).FormulaA1 = $"AVERAGE({columns})";
+            }
+
+
+
+
+
+            wb.SaveAs(path);
         }
+
+        private static void ApplyWorkbookMetadata(IXLWorksheet ws, ReportSettings? settings)
+        {
+            if(settings != null)
+            {
+                ws.Cell(4, 15).Value = settings.TestName;
+                ws.Cell(5, 15).Value = settings.LabAssistantFullName;
+            }
+        }
+
+
+        private static void SetYellowLine(IXLWorksheet ws, int line, int start, int end)
+        {
+            for(int i = start; i <= end; i++)
+            {
+                IXLCell cell = ws.Cell(line, i);
+                cell.Style.Fill.SetBackgroundColor(XLColor.Yellow);
+            }
+        }
+
+
+
+
+        private static bool TryGetFieldValue(
+            DataContainer.DataRow data,
+            Dictionary<DataContainer.DataField, string> fields,
+            DataContainer.DataField field,
+            out double value)
+        {
+            value = default;
+
+            if (!fields.TryGetValue(field, out string? channelName))
+                return false;
+
+            value = data[channelName];
+            return true;
+        }
+
         private static void setCell(IXLWorksheet ws, int line, ref int row, double data, XLColor? color = null)
         {
             IXLCell cell = ws.Cell(Line0 + line, Row0 + row);
@@ -91,6 +225,7 @@ namespace FridgeLabReport
 
             row++;
         }
+
         private static void setCell(IXLWorksheet ws, int line, ref int row, long data, XLColor? color = null)
         {
             IXLCell cell = ws.Cell(Line0 + line, Row0 + row);
@@ -106,6 +241,7 @@ namespace FridgeLabReport
 
             row++;
         }
+
         private static void setCell(IXLWorksheet ws, int line, ref int row, string data, XLColor? color = null)
         {
             IXLCell cell = ws.Cell(Line0 + line, Row0 + row);
@@ -140,15 +276,14 @@ namespace FridgeLabReport
 
         private static string toDateSec(long time, string format)
         {
-            DateTime dt = new DateTime().AddMilliseconds(time);//    DateTimeOffset.FromUnixTimeMilliseconds(time).LocalDateTime;
+            DateTime dt = new DateTime().AddMilliseconds(time);
             return dt.ToString(format);
         }
+
         private static string toDate(long time, string format)
         {
             DateTime dt = DateTimeOffset.FromUnixTimeMilliseconds(time).LocalDateTime;
             return dt.ToString(format);
         }
-
-
     }
 }

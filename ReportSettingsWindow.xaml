@@ -1,0 +1,91 @@
+<Window x:Class="FridgeLabReport.ReportSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Параметры отчёта"
+        Height="340"
+        Width="560"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Grid.Column="0"
+                       Margin="0,0,10,10"
+                       VerticalAlignment="Center"
+                       Text="ФИО лаборанта"/>
+            <TextBox x:Name="TbLabAssistant"
+                     Grid.Row="0"
+                     Grid.Column="1"
+                     Margin="0,0,0,10"/>
+
+            <TextBlock Grid.Row="1"
+                       Grid.Column="0"
+                       Margin="0,0,10,10"
+                       VerticalAlignment="Center"
+                       Text="Название испытания"/>
+            <TextBox x:Name="TbTestName"
+                     Grid.Row="1"
+                     Grid.Column="1"
+                     Margin="0,0,0,10"/>
+
+            <TextBlock Grid.Row="2"
+                       Grid.Column="0"
+                       Margin="0,0,10,10"
+                       VerticalAlignment="Center"
+                       Text="Минимальная мощность"/>
+            <TextBox x:Name="TbMinPower"
+                     Grid.Row="2"
+                     Grid.Column="1"
+                     Margin="0,0,0,10"
+                     ToolTip="Если поле пустое, подсветка по мощности отключена"/>
+
+            <TextBlock Grid.Row="3"
+                       Grid.Column="0"
+                       Margin="0,0,10,10"
+                       VerticalAlignment="Center"
+                       Text="Минимальная Tcompr"/>
+            <TextBox x:Name="TbMinTCompressor"
+                     Grid.Row="3"
+                     Grid.Column="1"
+                     Margin="0,0,0,10"
+                     ToolTip="Если поле пустое, подсветка по Tcompr отключена"/>
+
+            <TextBlock Grid.Row="4"
+                       Grid.Column="1"
+                       Foreground="Gray"
+                       Text="Можно вводить дробные значения через запятую или точку."/>
+        </Grid>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,12,0,0">
+            <Button Width="100"
+                    Height="30"
+                    Margin="0,0,8,0"
+                    Content="Сохранить"
+                    Click="BtnSave_Click"/>
+            <Button Width="100"
+                    Height="30"
+                    Content="Отмена"
+                    IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

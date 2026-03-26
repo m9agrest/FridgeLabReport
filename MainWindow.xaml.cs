@@ -17,9 +17,12 @@ namespace FridgeLabReport
         private long selectedFrom;
         private long selectedTo;
 
+        private ReportSettings reportSettings = new();
+
         public MainWindow()
         {
             InitializeComponent();
+            UpdateReportSettingsSummary();
             SetDisabledState();
         }
 
@@ -40,6 +43,7 @@ namespace FridgeLabReport
 
             BindingsPanel.Children.Clear();
             TbStatus.Text = "Файл не выбран";
+            UpdateReportSettingsSummary();
         }
 
         private void SetEnabledState()
@@ -109,6 +113,38 @@ namespace FridgeLabReport
             finally
             {
                 busyWindow.Close();
+            }
+        }
+
+
+        private void UpdateReportSettingsSummary()
+        {
+            string lab = string.IsNullOrWhiteSpace(reportSettings.LabAssistantFullName)
+                ? "—"
+                : reportSettings.LabAssistantFullName;
+
+            string test = string.IsNullOrWhiteSpace(reportSettings.TestName)
+                ? "—"
+                : reportSettings.TestName;
+
+            string minPower = reportSettings.MinPowerHighlight?.ToString(CultureInfo.CurrentCulture) ?? "—";
+            string minTCompressor = reportSettings.MinTCompressorHighlight?.ToString(CultureInfo.CurrentCulture) ?? "—";
+
+            TbReportSettingsSummary.Text =
+                $"Лаборант: {lab}; испытание: {test}; мин. мощность: {minPower}; мин. Tcompr: {minTCompressor}";
+        }
+
+        private void BtnReportSettings_Click(object sender, RoutedEventArgs e)
+        {
+            ReportSettingsWindow window = new ReportSettingsWindow(reportSettings)
+            {
+                Owner = this
+            };
+
+            if (window.ShowDialog() == true)
+            {
+                reportSettings = window.ResultSettings;
+                UpdateReportSettingsSummary();
             }
         }
 
@@ -376,7 +412,7 @@ namespace FridgeLabReport
 
                 await Task.Run(() =>
                 {
-                    Generator.GenerateXlsx(dialog.FileName, tCount, fields, dataRows);
+                    Generator.GenerateXlsx(dialog.FileName, tCount, fields, dataRows, reportSettings);
                 });
             }
             catch (Exception ex)

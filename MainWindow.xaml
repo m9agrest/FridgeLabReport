@@ -12,6 +12,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Шапка -->
@@ -137,10 +138,22 @@
             </ScrollViewer>
         </GroupBox>
 
+        <TextBlock x:Name="TbReportSettingsSummary"
+                   Grid.Row="4"
+                   Margin="2,0,0,8"
+                   Foreground="Gray"
+                   Text="Параметры отчёта не заданы"/>
+
         <!-- Кнопки -->
-        <StackPanel Grid.Row="4"
+        <StackPanel Grid.Row="5"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
+            <Button x:Name="BtnReportSettings"
+                    Width="180"
+                    Height="32"
+                    Margin="0,0,8,0"
+                    Content="Параметры отчёта"
+                    Click="BtnReportSettings_Click"/>
             <Button x:Name="BtnBuildReport"
                     Width="180"
                     Height="32"
