@@ -222,7 +222,7 @@ namespace FridgeLabReport.Data
             private readonly DataContainer dc;
             private readonly long time;
             private readonly Dictionary<int, double> Values;
-
+            public long StartTime => dc.time;
             public long Time => time + dc.time;
             public long LocalTime => time;
 

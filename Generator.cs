@@ -28,7 +28,7 @@ namespace FridgeLabReport
             using var wb = new XLWorkbook(Path.Combine(AppContext.BaseDirectory, "Templates", $"t{Tcount}.xlsx"));
             IXLWorksheet ws = wb.Worksheet(1);
 
-            ApplyWorkbookMetadata(ws, settings);
+            ApplyWorkbookMetadata(ws, settings, dataRows);
 
             /*********    Генерируем основную таблицу     *********/
 
@@ -188,13 +188,18 @@ namespace FridgeLabReport
 
 
         //отрисовывает желтую строку
-        private static void ApplyWorkbookMetadata(IXLWorksheet ws, ReportSettings? settings)
+        private static void ApplyWorkbookMetadata(IXLWorksheet ws, ReportSettings? settings, List<DataContainer.DataRow> dataRows)
         {
             if(settings != null)
             {
                 ws.Cell(4, 15).Value = settings.TestName;
                 ws.Cell(5, 15).Value = settings.LabAssistantFullName;
             }
+            
+            ws.Cell(7, 15).Value = toDate(dataRows[0].StartTime, "dd.MM.yyyy HH:mm:ss");
+            ws.Cell(8, 15).Value = toDate(dataRows[0].Time, "dd.MM.yyyy HH:mm:ss") + " - " + toDate(dataRows.Last().Time, "dd.MM.yyyy HH:mm:ss");
+            ws.Cell(9, 15).Value = toDateSec(dataRows.Last().Time - dataRows[0].Time, "HH:mm:ss");
+
         }
 
 
