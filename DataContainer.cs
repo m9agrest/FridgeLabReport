@@ -54,7 +54,11 @@ namespace FridgeLabReport.Data
 
         private readonly long time = 0;
         private readonly Dictionary<string, int> ChannelMap = new();
-        private static readonly Dictionary<DataField, string> FieldToChannel = new()
+        public void SetFieldToChannel(Dictionary<DataField, string> newFieldToChannel)
+        {
+            FieldToChannel = newFieldToChannel;
+        }
+        private Dictionary<DataField, string> FieldToChannel = new()
         {
             { DataField.Time, "time" },
 
@@ -178,7 +182,7 @@ namespace FridgeLabReport.Data
                 dc.ChannelMap[name] = i;
             }
 
-            if (!dc.ChannelMap.ContainsKey(FieldToChannel[DataField.Time]))
+            if (!dc.ChannelMap.ContainsKey(dc.FieldToChannel[DataField.Time]))
                 throw new ArgumentException("В файле не найден канал time");
 
             //читаем данные начиная с lineData и заполняем AddDataRow, перед этим парся данные в double и отсеивая мусор из trashData
@@ -205,7 +209,7 @@ namespace FridgeLabReport.Data
                     }
                 }
 
-                if (!values.ContainsKey(dc.ChannelMap[FieldToChannel[DataField.Time]]))
+                if (!values.ContainsKey(dc.ChannelMap[dc.FieldToChannel[DataField.Time]]))
                     continue;
 
                 dc.dataRows.Add(new DataRow(dc, values));
@@ -239,7 +243,7 @@ namespace FridgeLabReport.Data
 
             public double GetValue(int index) => Values.GetValueOrDefault(index, default);
             public double GetValue(string channelName) => GetValue(dc.ChannelMap[channelName]);
-            public double GetValue(DataField field) => GetValue(FieldToChannel[field]);
+            public double GetValue(DataField field) => GetValue(dc.FieldToChannel[field]);
         }
     }
 }

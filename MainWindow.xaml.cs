@@ -419,7 +419,7 @@ namespace FridgeLabReport
             if (docxDialog.ShowDialog() == true)
                 docxPath = docxDialog.FileName;
 
-            BusyWindow busyWindow = new BusyWindow("Генерируем файл...")
+            BusyWindow busyWindow = new BusyWindow("Генерируем файл(ы)...")
             {
                 Owner = this
             };
@@ -430,6 +430,8 @@ namespace FridgeLabReport
 
                 await Task.Run(() =>
                 {
+                    dc.SetFieldToChannel(fields);
+
                     // сначала генерим excel
                     Generator.GenerateXlsx(xlsxPath, tCount, fields, dataRows, reportSettings);
 

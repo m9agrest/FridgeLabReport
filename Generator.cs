@@ -65,7 +65,7 @@ namespace FridgeLabReport
         public static void GenerateXlsx(
             string path,
             int Tcount,
-            Dictionary<DataContainer.DataField, string> fields,
+            //Dictionary<DataContainer.DataField, string> fields,
             List<DataContainer.DataRow> dataRows,
             ReportSettings? settings = null)
         {
@@ -89,13 +89,13 @@ namespace FridgeLabReport
                 setCell(ws, line, ref row, toDateSec(data.LocalTime, "HH:mm:ss"));
                 setCell(ws, line, ref row, toDate(data.Time, "dd.MM.yyyy"));
                 setCell(ws, line, ref row, toDate(data.Time, "HH:mm:ss"));
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.Pc]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.Pe]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TcFilter]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TeSuction]]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.Pc]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.Pe]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.TcFilter]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.TeSuction]);
 
 
-                double tCompressor = data[fields[DataContainer.DataField.TCompressor]];
+                double tCompressor = data[DataContainer.DataField.TCompressor];
                 if (settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)//TCompressor ниже минимума
                 {
                     setCell(ws, line, ref row, tCompressor, XLColor.DarkRed);
@@ -105,10 +105,10 @@ namespace FridgeLabReport
                     setCell(ws, line, ref row, tCompressor, XLColor.FromHtml("#F4B183"));
                 }
 
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TCondInAir]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TCondOutAir]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TEvapInAir]], XLColor.FromHtml("#70AD47"));
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.TEvapOutAir]], XLColor.FromHtml("#70AD47"));
+                setCell(ws, line, ref row, data[DataContainer.DataField.TCondInAir]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.TCondOutAir]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.TEvapInAir], XLColor.FromHtml("#70AD47"));
+                setCell(ws, line, ref row, data[DataContainer.DataField.TEvapOutAir], XLColor.FromHtml("#70AD47"));
 
                 rowStart = Row0 + row;
                 for (int i = 1; i <= Tcount; i++)
@@ -120,15 +120,15 @@ namespace FridgeLabReport
                     if (i > 15) color = XLColor.FromHtml("#FFC2F3");
                     if (i > 20) color = XLColor.FromHtml("#C2F0FF");
                     if (i > 25) color = XLColor.FromHtml("#FFC2C2");
-                    setCell(ws, line, ref row, data[fields[(DataContainer.DataField)i]], color);
+                    setCell(ws, line, ref row, data[(DataContainer.DataField)i], color);
                 }
                 rowEnd = Row0 + row - 1;
                 string rangeT = $"{XLHelper.GetColumnLetterFromNumber(rowStart)}{Line0 + line}:{XLHelper.GetColumnLetterFromNumber(rowEnd)}{Line0 + line}";
 
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.Voltage]]);
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.Current]]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.Voltage]);
+                setCell(ws, line, ref row, data[DataContainer.DataField.Current]);
 
-                double power = data[fields[DataContainer.DataField.Power]];
+                double power = data[DataContainer.DataField.Power];
 
 
                 bool setYellow = false;//нужно ли рисовать линию
@@ -161,9 +161,9 @@ namespace FridgeLabReport
                     isPowerMin = false;
                 }
 
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.ChamberHumidity]], XLColor.FromHtml("#BFBFBF"));
+                setCell(ws, line, ref row, data[DataContainer.DataField.ChamberHumidity], XLColor.FromHtml("#BFBFBF"));
                 int r0 = Row0 + row;
-                setCell(ws, line, ref row, data[fields[DataContainer.DataField.ChamberTemperature]], XLColor.FromHtml("#BFBFBF"));
+                setCell(ws, line, ref row, data[DataContainer.DataField.ChamberTemperature], XLColor.FromHtml("#BFBFBF"));
 
                 //мин макс и сред значение по линии от Т1 до Tcount
                 setCellFormule(ws, line, ref row, $"MIN({rangeT})", XLColor.FromHtml("#DEEBF7"));
