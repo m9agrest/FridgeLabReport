@@ -1,11 +1,57 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using FridgeLabReport.Data;
+using System.Globalization;
 using System.IO;
+using WTable = DocumentFormat.OpenXml.Wordprocessing.Table;
+using WTableProperties = DocumentFormat.OpenXml.Wordprocessing.TableProperties;
+using WTableBorders = DocumentFormat.OpenXml.Wordprocessing.TableBorders;
+using WTableRow = DocumentFormat.OpenXml.Wordprocessing.TableRow;
+using WTableCell = DocumentFormat.OpenXml.Wordprocessing.TableCell;
+
+using WTopBorder = DocumentFormat.OpenXml.Wordprocessing.TopBorder;
+using WBottomBorder = DocumentFormat.OpenXml.Wordprocessing.BottomBorder;
+using WLeftBorder = DocumentFormat.OpenXml.Wordprocessing.LeftBorder;
+using WRightBorder = DocumentFormat.OpenXml.Wordprocessing.RightBorder;
+using WInsideHorizontalBorder = DocumentFormat.OpenXml.Wordprocessing.InsideHorizontalBorder;
+using WInsideVerticalBorder = DocumentFormat.OpenXml.Wordprocessing.InsideVerticalBorder;
+
+using WParagraph = DocumentFormat.OpenXml.Wordprocessing.Paragraph;
+using WRun = DocumentFormat.OpenXml.Wordprocessing.Run;
+using WText = DocumentFormat.OpenXml.Wordprocessing.Text;
+using WBody = DocumentFormat.OpenXml.Wordprocessing.Body;
+using WDocument = DocumentFormat.OpenXml.Wordprocessing.Document;
+using WBreak = DocumentFormat.OpenXml.Wordprocessing.Break;
+using WTabChar = DocumentFormat.OpenXml.Wordprocessing.TabChar;
 
 namespace FridgeLabReport
 {
     internal static class Generator
     {
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // ================================================================================================== //
+        // ===================================ГЕНЕРАТОР XLSX ФАЙЛА=========================================== //
+        // ================================================================================================== //
+
+
+
+
+
         private const int Line0 = 25;
         private const int Row0 = 2;
 
@@ -50,7 +96,7 @@ namespace FridgeLabReport
 
 
                 double tCompressor = data[fields[DataContainer.DataField.TCompressor]];
-                if(settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)//TCompressor ниже минимума
+                if (settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)//TCompressor ниже минимума
                 {
                     setCell(ws, line, ref row, tCompressor, XLColor.DarkRed);
                 }
@@ -93,7 +139,7 @@ namespace FridgeLabReport
                     setCell(ws, line, ref row, power, XLColor.Yellow);
                     if (!isPowerMin)
                     {
-                        if(line > 0)//если не первая строка, то нужно рисовать линию
+                        if (line > 0)//если не первая строка, то нужно рисовать линию
                         {
                             setYellow = true;
                             setYellowLineStart = Line0 + line;
@@ -106,7 +152,7 @@ namespace FridgeLabReport
                     setCell(ws, line, ref row, power);
                     if (isPowerMin)
                     {
-                        if(line < dataRows.Count - 1)//если не последняя строка, то нужно рисовать линию
+                        if (line < dataRows.Count - 1)//если не последняя строка, то нужно рисовать линию
                         {
                             setYellow = true;
                             setYellowLineStart = Line0 + line - 1;
@@ -184,18 +230,21 @@ namespace FridgeLabReport
 
 
             wb.SaveAs(path);
+
+
+            //GenerateDocx(path + ".docx", Tcount, dataRows, ws, settings);
         }
 
 
         //отрисовывает желтую строку
         private static void ApplyWorkbookMetadata(IXLWorksheet ws, ReportSettings? settings, List<DataContainer.DataRow> dataRows)
         {
-            if(settings != null)
+            if (settings != null)
             {
                 ws.Cell(4, 15).Value = settings.TestName;
                 ws.Cell(5, 15).Value = settings.LabAssistantFullName;
             }
-            
+
             ws.Cell(7, 15).Value = toDate(dataRows[0].StartTime, "dd.MM.yyyy HH:mm:ss");
             ws.Cell(8, 15).Value = toDate(dataRows[0].Time, "dd.MM.yyyy HH:mm:ss") + " - " + toDate(dataRows.Last().Time, "dd.MM.yyyy HH:mm:ss");
             ws.Cell(9, 15).Value = toDateSec(dataRows.Last().Time - dataRows[0].Time, "HH:mm:ss");
@@ -205,7 +254,7 @@ namespace FridgeLabReport
 
         private static void SetYellowLine(IXLWorksheet ws, int line, int start, int end)
         {
-            for(int i = start; i <= end; i++)
+            for (int i = start; i <= end; i++)
             {
                 IXLCell cell = ws.Cell(line, i);
                 cell.Style.Fill.SetBackgroundColor(XLColor.Yellow);
@@ -289,5 +338,274 @@ namespace FridgeLabReport
             DateTime dt = DateTimeOffset.FromUnixTimeMilliseconds(time).LocalDateTime;
             return dt.ToString(format);
         }
+
+
+
+
+
+
+
+
+
+        // ================================================================================================== //
+        // ===================================ГЕНЕРАТОР DOCX ФАЙЛА=========================================== //
+        // ================================================================================================== //
+
+
+        static int DocLine1 => LineMinMaxAverage - 1;
+        static int DocRowText => RowAverage - 7;
+        static int DocLine2 => LineMinMaxAverage + 18;
+
+
+        public static void GenerateDocx(string docxPath, int Tcount, List<DataContainer.DataRow> dataRows, IXLWorksheet ws, ReportSettings? settings = null)
+        {
+            // Пересчитать формулы
+            ws.Workbook.RecalculateAllFormulas();
+
+            using var doc = WordprocessingDocument.Create(docxPath, WordprocessingDocumentType.Document);
+
+            MainDocumentPart mainPart = doc.MainDocumentPart ?? doc.AddMainDocumentPart();
+
+            if (mainPart.Document == null)
+                mainPart.Document = new Document(new Body());
+
+            Body body = mainPart.Document.Body!;
+
+
+            // ------ Заголовок ------
+            var title = new Paragraph(new WRun(new WText("Отчет"), new WBreak(), new WBreak()))
+            {
+                ParagraphProperties = new ParagraphProperties
+                {
+                    Justification = new Justification { Val = JustificationValues.Center }
+                }
+            };
+            body.Append(title);
+
+
+            // ------ Информация ------
+            if (settings != null)
+            {
+                Paragraph? baseInfo = null;
+                if (settings.TestName != null)
+                {
+                    baseInfo = new Paragraph();
+                    baseInfo.Append(new WRun(new WText("Название испытания: " + settings.TestName), new WBreak()));
+                }
+                if (settings.LabAssistantFullName != null)
+                {
+                    if (baseInfo == null) baseInfo = new Paragraph();
+                    baseInfo.Append(new WRun(new WText("Лаборант: " + settings.LabAssistantFullName), new WBreak()));
+                }
+                if (baseInfo != null)
+                {
+                    baseInfo.Append(new WRun(new WBreak()));
+                    body.Append(baseInfo);
+                }
+            }
+
+
+            // ------ Время испытания ------
+            var timeInfo = new Paragraph();
+            timeInfo.Append(new WRun(new WText("Начало испытания: " + toDate(dataRows[0].StartTime, "dd.MM.yyyy HH:mm:ss")), new WBreak()));
+            timeInfo.Append(new WRun(new WText("Выбранный отрезок:"), new WBreak()));
+            timeInfo.Append(new WRun(new WTabChar(), new WText("с: " + toDate(dataRows[0].Time, "dd.MM.yyyy HH:mm:ss")), new WBreak()));
+            timeInfo.Append(new WRun(new WTabChar(), new WText("по: " + toDate(dataRows.Last().Time, "dd.MM.yyyy HH:mm:ss")), new WBreak()));
+            timeInfo.Append(new WRun(new WTabChar(), new WText("итого: " + toDateSec(dataRows.Last().LocalTime - dataRows[0].LocalTime, "HH:mm:ss")), new WBreak(), new WBreak()));
+            body.Append(timeInfo);
+
+
+            // ------ Таблица ------
+            var tableInfo = new Paragraph();
+            var table = MakeTable(ws);
+            var tableEnd = new Paragraph();
+            tableInfo.Append(new WRun(new WText("Минимальные и максимальные значения с датчиков:")));
+            tableEnd.Append(new WRun(new WBreak(), new WBreak()));
+            body.Append(tableInfo);
+            body.Append(table);
+            body.Append(tableEnd);
+
+
+
+            // ------ min TCompr ------
+            if (settings != null && settings.MinTCompressorHighlight.HasValue)
+            {
+                var minTComprInfo = new Paragraph();
+                minTComprInfo.Append(new WRun(new WText($"Падения TCompressor, ниже минимального: {settings.MinTCompressorHighlight.Value}"), new WBreak()));
+                string? start = null;
+                string? end = null;
+                bool isStart = false;
+                for (int  i = 0; i < dataRows.Count; i++)
+                {
+                    var data = dataRows[i];
+                    double tCompressor = data[DataContainer.DataField.TCompressor];
+                    if (tCompressor < settings.MinTCompressorHighlight.Value)
+                    {
+                        end = toDate(data.Time, "dd.MM.yyyy HH:mm:ss");
+                        if (i == 0)
+                        {
+                            isStart = true;
+                        }
+                        if(start == null)
+                        {
+                            start = end;
+                        }
+                    }
+                    else
+                    {
+                        if (start != null)
+                        {
+                            if (isStart)
+                            {
+                                isStart = false;
+
+                                minTComprInfo.Append(new WRun(new WTabChar(), new WText("с начала выбранного отрезка, по: " + end), new WBreak()));
+                            }
+                            else
+                            {
+                                minTComprInfo.Append(new WRun(new WTabChar(), new WText("с: " + start + "; по: " + end), new WBreak()));
+                            }
+                            start = null;
+                            end = null;
+                        }
+                    }
+                }
+                if(start != null)
+                {
+                    if (isStart)
+                    {
+                        minTComprInfo.Append(new WRun(new WTabChar(), new WText("На протяжении всего выбранного отрезка"), new WBreak()));
+                    }
+                    else
+                    {
+                        minTComprInfo.Append(new WRun(new WTabChar(), new WText("с: " + start + "; по конец выбранного отрезка"), new WBreak()));
+                    }
+                }
+
+                body.Append(minTComprInfo);
+            }
+
+            // ------ min Power ------
+            if (settings != null && settings.MinPowerHighlight.HasValue)
+            {
+                var minPower = new Paragraph();
+                minPower.Append(new WRun(new WText($"Падения мощности, ниже минимального: {settings.MinPowerHighlight.Value}"), new WBreak()));
+                string? start = null;
+                string? end = null;
+                bool isStart = false;
+                for (int i = 0; i < dataRows.Count; i++)
+                {
+                    var data = dataRows[i];
+                    double power = data[DataContainer.DataField.Power];
+                    if (power < settings.MinPowerHighlight.Value)
+                    {
+                        end = toDate(data.Time, "dd.MM.yyyy HH:mm:ss");
+                        if (i == 0)
+                        {
+                            isStart = true;
+                        }
+                        if (start == null)
+                        {
+                            start = end;
+                        }
+                    }
+                    else
+                    {
+                        if (start != null)
+                        {
+                            if (isStart)
+                            {
+                                isStart = false;
+
+                                minPower.Append(new WRun(new WTabChar(), new WText("с начала выбранного отрезка, по: " + end), new WBreak()));
+                            }
+                            else
+                            {
+                                minPower.Append(new WRun(new WTabChar(), new WText("с: " + start + "; по: " + end), new WBreak()));
+                            }
+                            start = null;
+                            end = null;
+                        }
+                    }
+                }
+                if (start != null)
+                {
+                    if (isStart)
+                    {
+                        minPower.Append(new WRun(new WTabChar(), new WText("На протяжении всего выбранного отрезка"), new WBreak()));
+                    }
+                    else
+                    {
+                        minPower.Append(new WRun(new WTabChar(), new WText("с: " + start + "; по конец выбранного отрезка"), new WBreak()));
+                    }
+                }
+
+                body.Append(minPower);
+            }
+
+
+
+            mainPart.Document.Save();
+        }
+
+
+        private static WTable MakeTable(IXLWorksheet ws)
+        {
+            var table = new WTable();
+
+            // Границы таблицы
+            var props = new TableProperties(
+                new TableBorders(
+                    new WTopBorder { Val = BorderValues.Single, Size = 4 },
+                    new WBottomBorder { Val = BorderValues.Single, Size = 4 },
+                    new WLeftBorder { Val = BorderValues.Single, Size = 4 },
+                    new WRightBorder { Val = BorderValues.Single, Size = 4 },
+                    new InsideHorizontalBorder { Val = BorderValues.Single, Size = 4 },
+                    new InsideVerticalBorder { Val = BorderValues.Single, Size = 4 }
+                )
+            );
+
+            table.AppendChild(props);
+
+            var culture = new CultureInfo("ru-RU");
+
+            for (int r = DocLine1; r <= DocLine2; r++)
+            {
+                var tr = new TableRow();
+
+                tr.Append(MakeCell(ws.Cell(r, DocRowText).GetFormattedString(culture), "5000"));
+                tr.Append(MakeCell(ws.Cell(r, RowMin).GetFormattedString(culture), "1200"));
+                tr.Append(MakeCell(ws.Cell(r, RowMax).GetFormattedString(culture), "1200"));
+                tr.Append(MakeCell(ws.Cell(r, RowAverage).GetFormattedString(culture), "1200"));
+
+                table.Append(tr);
+            }
+
+
+
+            return table;
+        }
+
+        private static TableCell MakeCell(string text, string width)
+        {
+            return new TableCell(
+                new TableCellProperties(
+                    new TableCellWidth
+                    {
+                        Type = TableWidthUnitValues.Dxa,
+                        Width = width
+                    }
+                ),
+                new Paragraph(
+                    new WRun(
+                        new WText(text ?? string.Empty)
+                        {
+                            Space = SpaceProcessingModeValues.Preserve
+                        }
+                    )
+                )
+            );
+        }
+
     }
 }

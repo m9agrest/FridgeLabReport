@@ -1,4 +1,5 @@
-﻿using FridgeLabReport.Data;
+﻿using ClosedXML.Excel;
+using FridgeLabReport.Data;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Globalization;
@@ -389,7 +390,8 @@ namespace FridgeLabReport
             if (string.IsNullOrWhiteSpace(sourceFileName))
                 sourceFileName = "report";
 
-            SaveFileDialog dialog = new SaveFileDialog()
+            // 1. выбор xlsx
+            SaveFileDialog xlsxDialog = new SaveFileDialog()
             {
                 Filter = "Excel file (*.xlsx)|*.xlsx",
                 DefaultExt = "xlsx",
@@ -398,8 +400,24 @@ namespace FridgeLabReport
                 OverwritePrompt = true
             };
 
-            if (dialog.ShowDialog() != true)
+            if (xlsxDialog.ShowDialog() != true)
                 return;
+
+            string xlsxPath = xlsxDialog.FileName;
+
+            // 2. выбор docx
+            SaveFileDialog docxDialog = new SaveFileDialog()
+            {
+                Filter = "Word file (*.docx)|*.docx",
+                DefaultExt = "docx",
+                AddExtension = true,
+                FileName = sourceFileName + ".docx",
+                OverwritePrompt = true
+            };
+
+            string? docxPath = null;
+            if (docxDialog.ShowDialog() == true)
+                docxPath = docxDialog.FileName;
 
             BusyWindow busyWindow = new BusyWindow("Генерируем файл...")
             {
@@ -412,7 +430,18 @@ namespace FridgeLabReport
 
                 await Task.Run(() =>
                 {
-                    Generator.GenerateXlsx(dialog.FileName, tCount, fields, dataRows, reportSettings);
+                    // сначала генерим excel
+                    Generator.GenerateXlsx(xlsxPath, tCount, fields, dataRows, reportSettings);
+
+                    // если docx отменили — на этом всё
+                    if (string.IsNullOrWhiteSpace(docxPath))
+                        return;
+
+                    // открываем сохранённый xlsx и по нему строим docx
+                    using var wb = new XLWorkbook(xlsxPath);
+                    IXLWorksheet ws = wb.Worksheet(1);
+
+                    Generator.GenerateDocx(docxPath, tCount, dataRows, ws, reportSettings);
                 });
             }
             catch (Exception ex)
@@ -429,19 +458,31 @@ namespace FridgeLabReport
                 busyWindow.Close();
             }
 
+            string successText = string.IsNullOrWhiteSpace(docxPath)
+                ? "Таблица успешно сгенерирована.\n\nОткрыть её?"
+                : "Файлы успешно сгенерированы.\n\nОткрыть их?";
+
             MessageBoxResult result = MessageBox.Show(this,
-                "Файл успешно сгенерирован.\n\nОткрыть его?",
+                successText,
                 "Готово",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Information);
 
-            if (result == MessageBoxResult.Yes && File.Exists(dialog.FileName))
+            if (result == MessageBoxResult.Yes && File.Exists(xlsxPath))
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = dialog.FileName,
+                    FileName = xlsxPath,
                     UseShellExecute = true
                 });
+                if (!string.IsNullOrWhiteSpace(docxPath))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = docxPath,
+                        UseShellExecute = true
+                    });
+                }
             }
         }
     }
