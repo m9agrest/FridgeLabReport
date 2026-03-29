@@ -433,7 +433,7 @@ namespace FridgeLabReport
                     dc.SetFieldToChannel(fields);
 
                     // сначала генерим excel
-                    Generator.GenerateXlsx(xlsxPath, tCount, fields, dataRows, reportSettings);
+                    Generator.GenerateXlsx(xlsxPath, tCount, dataRows, reportSettings);
 
                     // если docx отменили — на этом всё
                     if (string.IsNullOrWhiteSpace(docxPath))
