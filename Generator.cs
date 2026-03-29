@@ -386,22 +386,18 @@ namespace FridgeLabReport
             // ------ Информация ------
             if (settings != null)
             {
-                Paragraph? baseInfo = null;
+                Paragraph? baseInfo = new Paragraph();
                 if (settings.TestName != null)
                 {
-                    baseInfo = new Paragraph();
                     baseInfo.Append(new WRun(new WText("Название испытания: " + settings.TestName), new WBreak()));
                 }
                 if (settings.LabAssistantFullName != null)
                 {
-                    if (baseInfo == null) baseInfo = new Paragraph();
                     baseInfo.Append(new WRun(new WText("Лаборант: " + settings.LabAssistantFullName), new WBreak()));
                 }
-                if (baseInfo != null)
-                {
-                    baseInfo.Append(new WRun(new WBreak()));
-                    body.Append(baseInfo);
-                }
+                baseInfo.Append(new WRun(new WText("Кол-во датчиков T: " + Tcount), new WBreak()));
+                baseInfo.Append(new WRun(new WBreak()));
+                body.Append(baseInfo);
             }
 
 
