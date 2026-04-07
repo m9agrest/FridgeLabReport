@@ -224,17 +224,17 @@ namespace FridgeLabReport.Data
         public sealed class DataRow
         {
             private readonly DataContainer dc;
-            private readonly long time;
+            private readonly double time;
             private readonly Dictionary<int, double> Values;
             public long StartTime => dc.time;
-            public long Time => time + dc.time;
-            public long LocalTime => time;
+            public long Time => LocalTime + dc.time;
+            public long LocalTime => (long)(time * 1000);
 
             internal DataRow(DataContainer dataContainer, Dictionary<int, double> values)
             {
                 dc = dataContainer;
                 Values = values;
-                time = (long)this[DataField.Time];
+                time = this[DataField.Time];
             }
 
             public double this[int index] => GetValue(index);

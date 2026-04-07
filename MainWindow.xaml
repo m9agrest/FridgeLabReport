@@ -4,6 +4,7 @@
         Title="FridgeLab Report"
         Height="760"
         Width="1000"
+        Icon="Assets/app.ico"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="12">
         <Grid.RowDefinitions>

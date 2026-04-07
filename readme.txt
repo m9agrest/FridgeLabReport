@@ -1,0 +1,1 @@
+﻿Иконка приложения взята с https://svg4.ru/icons/storage-table

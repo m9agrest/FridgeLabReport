@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "FridgeLabReport"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "M9 Studio"
 #define MyAppURL "https://m9studio.net/"
 #define MyAppExeName "FridgeLabReport.exe"
@@ -21,6 +21,7 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=C:\Users\mina987\Documents\GitHub\FridgeLabReport\Assets\app.ico
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
 ArchitecturesAllowed=x64compatible

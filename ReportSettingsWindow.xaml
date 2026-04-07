@@ -5,6 +5,7 @@
         Height="340"
         Width="560"
         ResizeMode="NoResize"
+        Icon="Assets/app.ico"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="12">
         <Grid.RowDefinitions>
