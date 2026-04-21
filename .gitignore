@@ -224,3 +224,8 @@ AppPackages/
 #####
 # End of core ignore list, below put you custom 'per project' settings (patterns or path)
 #####
+
+# Папка в которую генерируется установщик приложения
+Output/
+# Папка с тестами и заметками
+Test/

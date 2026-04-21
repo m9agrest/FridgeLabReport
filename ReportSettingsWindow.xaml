@@ -2,23 +2,34 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Параметры отчёта"
-        Height="340"
+        Height="385"
         Width="560"
         ResizeMode="NoResize"
         Icon="Assets/app.ico"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
+        <Menu Grid.Row="0" Margin="0,0,0,12">
+            <MenuItem Header="Файл">
+                <MenuItem Header="Сохранить как настройки по умолчанию"
+                          Click="MiSaveDefaults_Click"/>
+                <MenuItem Header="Сбросить сохранённые настройки"
+                          Click="MiResetDefaults_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="230"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -69,12 +80,23 @@
                      ToolTip="Если поле пустое, подсветка по Tcompr отключена"/>
 
             <TextBlock Grid.Row="4"
+                       Grid.Column="0"
+                       Margin="0,0,10,10"
+                       VerticalAlignment="Center"
+                       Text="Переход всех T за указанное значение"/>
+            <TextBox x:Name="TbMaxAllT"
+                     Grid.Row="4"
+                     Grid.Column="1"
+                     Margin="0,0,0,10"
+                     ToolTip="Если поле пустое, подсветка перехода всех потоков T за указанное отключена"/>
+
+            <TextBlock Grid.Row="5"
                        Grid.Column="1"
                        Foreground="Gray"
-                       Text="Можно вводить дробные значения через запятую или точку."/>
+                       Text="Снизу — сохранить только для текущего отчёта. Через меню сверху — сохранить как настройки по умолчанию."/>
         </Grid>
 
-        <StackPanel Grid.Row="1"
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,12,0,0">

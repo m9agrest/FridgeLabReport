@@ -119,7 +119,7 @@ namespace FridgeLabReport.Data
             { DataField.Frequency, "C463" },
 
             // Мощность — как рабочий основной канал
-            { DataField.Power, "C559" },
+            { DataField.Power, "C462" },
 
             // Дополнительно
             { DataField.HeaterPower2, "C569" },

@@ -86,7 +86,7 @@ namespace FridgeLabReport
                 int rowStart = 0;
                 int rowEnd = 0;
 
-                setCell(ws, line, ref row, toDateSec(data.LocalTime, "HH:mm:ss"));
+                setCell(ws, line, ref row, toDateSec(data.LocalTime - dataRows.First().LocalTime, "HH:mm:ss"));
                 setCell(ws, line, ref row, toDate(data.Time, "dd.MM.yyyy"));
                 setCell(ws, line, ref row, toDate(data.Time, "HH:mm:ss"));
                 setCell(ws, line, ref row, data[DataContainer.DataField.Pc]);
@@ -96,14 +96,14 @@ namespace FridgeLabReport
 
 
                 double tCompressor = data[DataContainer.DataField.TCompressor];
+                int rowTCompressorHighlight = Row0 + row;
+                bool isMinTCompressorHighlight = false; ;
                 if (settings != null && settings.MinTCompressorHighlight.HasValue && tCompressor < settings.MinTCompressorHighlight.Value)//TCompressor ниже минимума
                 {
-                    setCell(ws, line, ref row, tCompressor, XLColor.DarkRed);
+                    isMinTCompressorHighlight = true;
                 }
-                else//TCompressor выше минимума
-                {
-                    setCell(ws, line, ref row, tCompressor, XLColor.FromHtml("#F4B183"));
-                }
+
+                setCell(ws, line, ref row, tCompressor, XLColor.FromHtml("#F4B183"));
 
                 setCell(ws, line, ref row, data[DataContainer.DataField.TCondInAir]);
                 setCell(ws, line, ref row, data[DataContainer.DataField.TCondOutAir]);
@@ -111,6 +111,7 @@ namespace FridgeLabReport
                 setCell(ws, line, ref row, data[DataContainer.DataField.TEvapOutAir], XLColor.FromHtml("#70AD47"));
 
                 rowStart = Row0 + row;
+                bool isMaxAllT = true;
                 for (int i = 1; i <= Tcount; i++)
                 {
                     //каждые 5 колонок у Т, меняем цвет
@@ -121,6 +122,15 @@ namespace FridgeLabReport
                     if (i > 20) color = XLColor.FromHtml("#C2F0FF");
                     if (i > 25) color = XLColor.FromHtml("#FFC2C2");
                     setCell(ws, line, ref row, data[(DataContainer.DataField)i], color);
+
+                    if(settings != null && settings.MaxAllT != null)
+                    {
+                        //если хоть одно значение меньше, то уже isMaxAllT будет false
+                        if (data[(DataContainer.DataField)i] < settings.MaxAllT)
+                        {
+                            isMaxAllT = false;
+                        }
+                    }
                 }
                 rowEnd = Row0 + row - 1;
                 string rangeT = $"{XLHelper.GetColumnLetterFromNumber(rowStart)}{Line0 + line}:{XLHelper.GetColumnLetterFromNumber(rowEnd)}{Line0 + line}";
@@ -187,6 +197,21 @@ namespace FridgeLabReport
                 {
                     SetYellowLine(ws, setYellowLineStart, Row0 + 3, Row0 + row - 1);
                 }
+
+                if (isMaxAllT)
+                {
+                    for(int r = rowStart; r <= rowEnd; r++)
+                    {
+                        IXLCell cell = ws.Cell(Line0 + line, r);
+                        cell.Style.Fill.SetBackgroundColor(XLColor.Green);
+                    }
+                }
+
+                if (isMinTCompressorHighlight)
+                {
+                    IXLCell cell = ws.Cell(Line0 + line, rowTCompressorHighlight);
+                    cell.Style.Fill.SetBackgroundColor(XLColor.DarkRed);
+                }
             }
 
             /********   Генерируем таблицу мин макс сред значений по основной таблице    *******/
@@ -247,7 +272,7 @@ namespace FridgeLabReport
 
             ws.Cell(7, 15).Value = toDate(dataRows[0].StartTime, "dd.MM.yyyy HH:mm:ss");
             ws.Cell(8, 15).Value = toDate(dataRows[0].Time, "dd.MM.yyyy HH:mm:ss") + " - " + toDate(dataRows.Last().Time, "dd.MM.yyyy HH:mm:ss");
-            ws.Cell(9, 15).Value = toDateSec(dataRows.Last().Time - dataRows[0].Time, "HH:mm:ss");
+            ws.Cell(9, 15).Value = toDateSec(dataRows.Last().LocalTime - dataRows.First().LocalTime, "HH:mm:ss");
 
         }
 

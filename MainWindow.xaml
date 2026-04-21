@@ -11,13 +11,25 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Верхнее меню -->
+        <Menu Grid.Row="0" Margin="0,0,0,10">
+            <MenuItem Header="Файл">
+                <MenuItem x:Name="BtnSaveChannelConfig" Header="Сохранить настройки"
+                          Click="BtnSaveChannelConfig_Click"/>
+                <Separator/>
+                <MenuItem x:Name="BtnResetChannelConfig" Header="Сбросить настройки"
+                          Click="BtnResetChannelConfig_Click"/>
+            </MenuItem>
+        </Menu>
+
         <!-- Шапка -->
-        <Grid Grid.Row="0" Margin="0,0,0,10">
+        <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="160"/>
@@ -43,7 +55,7 @@
         </Grid>
 
         <!-- Диапазон -->
-        <GroupBox Grid.Row="1" Header="Диапазон данных" Margin="0,0,0,10">
+        <GroupBox Grid.Row="2" Header="Диапазон данных" Margin="0,0,0,10">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -108,7 +120,7 @@
         </GroupBox>
 
         <!-- Конфигурация -->
-        <GroupBox Grid.Row="2" Header="Конфигурация" Margin="0,0,0,10">
+        <GroupBox Grid.Row="3" Header="Конфигурация" Margin="0,0,0,10">
             <Grid Margin="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="220"/>
@@ -133,20 +145,20 @@
         </GroupBox>
 
         <!-- Привязки -->
-        <GroupBox Grid.Row="3" Header="Привязка каналов" Margin="0,0,0,10">
+        <GroupBox Grid.Row="4" Header="Привязка каналов" Margin="0,0,0,10">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="BindingsPanel" Margin="10"/>
             </ScrollViewer>
         </GroupBox>
 
         <TextBlock x:Name="TbReportSettingsSummary"
-                   Grid.Row="4"
+                   Grid.Row="5"
                    Margin="2,0,0,8"
                    Foreground="Gray"
                    Text="Параметры отчёта не заданы"/>
 
         <!-- Кнопки -->
-        <StackPanel Grid.Row="5"
+        <StackPanel Grid.Row="6"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button x:Name="BtnReportSettings"

@@ -1,26 +1,103 @@
 using System.Globalization;
+using System.IO;
+using System.Text.Json;
 using System.Windows;
 
 namespace FridgeLabReport
 {
     public partial class ReportSettingsWindow : Window
     {
-        public ReportSettings ResultSettings { get; }
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true
+        };
+
+        private readonly string settingsFilePath;
+
+        public ReportSettings ResultSettings { get; private set; }
 
         public ReportSettingsWindow(ReportSettings source)
         {
             InitializeComponent();
 
-            ResultSettings = source.Clone();
+            settingsFilePath = Path.Combine(
+                AppContext.BaseDirectory,
+                "conf",
+                "report_settings.json");
 
-            TbLabAssistant.Text = ResultSettings.LabAssistantFullName;
-            TbTestName.Text = ResultSettings.TestName;
-            TbMinPower.Text = FormatNullableDouble(ResultSettings.MinPowerHighlight);
-            TbMinTCompressor.Text = FormatNullableDouble(ResultSettings.MinTCompressorHighlight);
+            ResultSettings = source.Clone();
+            FillControls(ResultSettings);
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
+            if (!TryBuildSettingsFromControls(out ReportSettings? settings))
+                return;
+
+            ResultSettings = settings;
+            DialogResult = true;
+            Close();
+        }
+
+        private void MiSaveDefaults_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TryBuildSettingsFromControls(out ReportSettings? settings))
+                return;
+
+            try
+            {
+                string? directory = Path.GetDirectoryName(settingsFilePath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                    Directory.CreateDirectory(directory);
+
+                string json = JsonSerializer.Serialize(settings, JsonOptions);
+                File.WriteAllText(settingsFilePath, json);
+
+                MessageBox.Show(this,
+                    "Настройки по умолчанию сохранены.",
+                    "Параметры отчёта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Не удалось сохранить настройки по умолчанию.\n\n" + ex.Message,
+                    "Параметры отчёта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void MiResetDefaults_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (File.Exists(settingsFilePath))
+                    File.Delete(settingsFilePath);
+
+                FillControls(new ReportSettings());
+
+                MessageBox.Show(this,
+                    "Сохранённые настройки удалены. Поля сброшены.",
+                    "Параметры отчёта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Не удалось сбросить сохранённые настройки.\n\n" + ex.Message,
+                    "Параметры отчёта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private bool TryBuildSettingsFromControls(out ReportSettings? settings)
+        {
+            settings = null;
+
             if (!TryParseNullableDouble(TbMinPower.Text, out double? minPower))
             {
                 MessageBox.Show(this,
@@ -28,7 +105,7 @@ namespace FridgeLabReport
                     "Параметры отчёта",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
-                return;
+                return false;
             }
 
             if (!TryParseNullableDouble(TbMinTCompressor.Text, out double? minTCompressor))
@@ -38,16 +115,38 @@ namespace FridgeLabReport
                     "Параметры отчёта",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
-                return;
+                return false;
             }
 
-            ResultSettings.LabAssistantFullName = TbLabAssistant.Text.Trim();
-            ResultSettings.TestName = TbTestName.Text.Trim();
-            ResultSettings.MinPowerHighlight = minPower;
-            ResultSettings.MinTCompressorHighlight = minTCompressor;
+            if (!TryParseNullableDouble(TbMaxAllT.Text, out double? maxAllT))
+            {
+                MessageBox.Show(this,
+                    "Переход всех T за указанное значение введён некорректно.",
+                    "Параметры отчёта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return false;
+            }
 
-            DialogResult = true;
-            Close();
+            settings = new ReportSettings
+            {
+                LabAssistantFullName = TbLabAssistant.Text.Trim(),
+                TestName = TbTestName.Text.Trim(),
+                MinPowerHighlight = minPower,
+                MinTCompressorHighlight = minTCompressor,
+                MaxAllT = maxAllT,
+            };
+
+            return true;
+        }
+
+        private void FillControls(ReportSettings settings)
+        {
+            TbLabAssistant.Text = settings.LabAssistantFullName;
+            TbTestName.Text = settings.TestName;
+            TbMinPower.Text = FormatNullableDouble(settings.MinPowerHighlight);
+            TbMinTCompressor.Text = FormatNullableDouble(settings.MinTCompressorHighlight);
+            TbMaxAllT.Text = FormatNullableDouble(settings.MaxAllT);
         }
 
         private static bool TryParseNullableDouble(string raw, out double? value)

@@ -3,7 +3,7 @@
 ; Non-commercial use only
 
 #define MyAppName "FridgeLabReport"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "M9 Studio"
 #define MyAppURL "https://m9studio.net/"
 #define MyAppExeName "FridgeLabReport.exe"

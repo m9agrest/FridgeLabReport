@@ -1,1 +1,4 @@
-﻿Иконка приложения взята с https://svg4.ru/icons/storage-table
+﻿Иконки приложения взяты с 
+
+https://svg4.ru/icons/storage-table
+https://svg4.ru/icons/script-file
