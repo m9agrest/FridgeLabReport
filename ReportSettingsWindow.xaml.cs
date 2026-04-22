@@ -118,7 +118,7 @@ namespace FridgeLabReport
                 return false;
             }
 
-            if (!TryParseNullableDouble(TbMaxAllT.Text, out double? maxAllT))
+            if (!TryParseNullableDouble(TbMinAllT.Text, out double? minAllT))
             {
                 MessageBox.Show(this,
                     "Переход всех T за указанное значение введён некорректно.",
@@ -134,7 +134,7 @@ namespace FridgeLabReport
                 TestName = TbTestName.Text.Trim(),
                 MinPowerHighlight = minPower,
                 MinTCompressorHighlight = minTCompressor,
-                MaxAllT = maxAllT,
+                MinAllT = minAllT,
             };
 
             return true;
@@ -146,7 +146,7 @@ namespace FridgeLabReport
             TbTestName.Text = settings.TestName;
             TbMinPower.Text = FormatNullableDouble(settings.MinPowerHighlight);
             TbMinTCompressor.Text = FormatNullableDouble(settings.MinTCompressorHighlight);
-            TbMaxAllT.Text = FormatNullableDouble(settings.MaxAllT);
+            TbMinAllT.Text = FormatNullableDouble(settings.MinAllT);
         }
 
         private static bool TryParseNullableDouble(string raw, out double? value)

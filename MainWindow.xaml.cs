@@ -193,10 +193,10 @@ namespace FridgeLabReport
 
             string minPower = reportSettings.MinPowerHighlight?.ToString(CultureInfo.CurrentCulture) ?? "—";
             string minTCompressor = reportSettings.MinTCompressorHighlight?.ToString(CultureInfo.CurrentCulture) ?? "—";
-            string maxAllT = reportSettings.MaxAllT?.ToString(CultureInfo.CurrentCulture) ?? "—";
+            string minAllT = reportSettings.MinAllT?.ToString(CultureInfo.CurrentCulture) ?? "—";
 
             TbReportSettingsSummary.Text =
-                $"Лаборант: {lab}; испытание: {test}; мин. мощность: {minPower}; мин. Tcompr: {minTCompressor}; макс. всех T: {maxAllT}";
+                $"Лаборант: {lab}; испытание: {test}; мин. мощность: {minPower}; мин. Tcompr: {minTCompressor}; мин. всех T: {minAllT}";
         }
 
         private void BtnReportSettings_Click(object sender, RoutedEventArgs e)

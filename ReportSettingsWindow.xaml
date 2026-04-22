@@ -83,8 +83,8 @@
                        Grid.Column="0"
                        Margin="0,0,10,10"
                        VerticalAlignment="Center"
-                       Text="Переход всех T за указанное значение"/>
-            <TextBox x:Name="TbMaxAllT"
+                       Text="Минимальное значение всех T"/>
+            <TextBox x:Name="TbMinAllT"
                      Grid.Row="4"
                      Grid.Column="1"
                      Margin="0,0,0,10"

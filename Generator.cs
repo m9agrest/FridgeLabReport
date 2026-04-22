@@ -111,7 +111,7 @@ namespace FridgeLabReport
                 setCell(ws, line, ref row, data[DataContainer.DataField.TEvapOutAir], XLColor.FromHtml("#70AD47"));
 
                 rowStart = Row0 + row;
-                bool isMaxAllT = true;
+                bool isMinAllT = true;
                 for (int i = 1; i <= Tcount; i++)
                 {
                     //каждые 5 колонок у Т, меняем цвет
@@ -123,12 +123,12 @@ namespace FridgeLabReport
                     if (i > 25) color = XLColor.FromHtml("#FFC2C2");
                     setCell(ws, line, ref row, data[(DataContainer.DataField)i], color);
 
-                    if(settings != null && settings.MaxAllT != null)
+                    if(settings != null && settings.MinAllT != null)
                     {
-                        //если хоть одно значение меньше, то уже isMaxAllT будет false
-                        if (data[(DataContainer.DataField)i] < settings.MaxAllT)
+                        //если хоть одно значение больше, то уже isMinAllT будет false
+                        if (data[(DataContainer.DataField)i] > settings.MinAllT)
                         {
-                            isMaxAllT = false;
+                            isMinAllT = false;
                         }
                     }
                 }
@@ -198,7 +198,7 @@ namespace FridgeLabReport
                     SetYellowLine(ws, setYellowLineStart, Row0 + 3, Row0 + row - 1);
                 }
 
-                if (isMaxAllT)
+                if (isMinAllT)
                 {
                     for(int r = rowStart; r <= rowEnd; r++)
                     {

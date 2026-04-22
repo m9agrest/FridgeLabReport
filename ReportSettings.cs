@@ -6,7 +6,7 @@ namespace FridgeLabReport
         public string TestName { get; set; } = string.Empty;
         public double? MinPowerHighlight { get; set; }
         public double? MinTCompressorHighlight { get; set; }
-        public double? MaxAllT { get; set; }
+        public double? MinAllT { get; set; }
 
         public ReportSettings Clone()
         {
@@ -16,7 +16,7 @@ namespace FridgeLabReport
                 TestName = TestName,
                 MinPowerHighlight = MinPowerHighlight,
                 MinTCompressorHighlight = MinTCompressorHighlight,
-                MaxAllT = MaxAllT,
+                MinAllT = MinAllT,
             };
         }
 
@@ -26,7 +26,7 @@ namespace FridgeLabReport
                 && string.IsNullOrWhiteSpace(TestName)
                 && MinPowerHighlight == null
                 && MinTCompressorHighlight == null
-                && MaxAllT == null;
+                && MinAllT == null;
         }
     }
 }
